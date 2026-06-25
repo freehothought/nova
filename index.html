@@ -27,7 +27,8 @@
   .grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
   .chip{padding:9px 13px;border-radius:20px;background:#26333f;border:1px solid var(--line);font-size:13px;cursor:pointer;transition:.12s}
   .chip.sel{background:var(--accent);border-color:var(--accent);color:#fff}
-  input[type=text]{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#26333f;color:var(--fg);font-size:14px;margin-top:4px}
+  input[type=text],select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#26333f;color:var(--fg);font-size:14px;margin-top:4px}
+  select{appearance:none;-webkit-appearance:none}
   input[type=text]::placeholder{color:var(--hint)}
   .btn{width:100%;padding:14px;border:0;border-radius:12px;background:var(--accent);color:#fff;font-size:16px;font-weight:600;cursor:pointer;margin-top:18px;transition:.15s}
   .btn:disabled{background:#33414e;color:#73818e;cursor:not-allowed}
@@ -71,7 +72,7 @@
       <button class="btn" id="ageNext"></button>
     </div>
     <div class="slide hidden" id="q_city">
-      <div class="card"><div class="label" id="t_city"></div><input type="text" id="city" maxlength="40"></div>
+      <div class="card"><div class="label" id="t_city"></div><select id="city"></select></div>
       <button class="btn" id="submit"></button>
     </div>
     <span class="skip" id="skip"></span>
@@ -163,9 +164,18 @@ set("t_o_title",T.o_title); set("t_o_sub",T.o_sub);
 set("t_acc",X.acc); set("t_age1",X.age); set("t_age2",X.p2); set("t_city",T.city);
 set("submit",T.submit); set("skip",T.skip); set("t_done",T.done); set("t_done_sub",T.done_sub);
 set("done_cta",X.cta); set("closeBtn",T.next); set("ageNext",T.next);
-document.getElementById("city").placeholder = T.cityph;
 document.getElementById("age1").placeholder = X.ageph;
 document.getElementById("age2").placeholder = X.ageph;
+
+// City: Nova's fixed Turkish province list (sent as name; the bot resolves to city_id).
+const CITIES=["Adana","Adıyaman","Afyonkarahisar","Ağrı","Amasya","Ankara","Antalya","Artvin","Aydın","Balıkesir","Bilecik","Bingöl","Bitlis","Bolu","Burdur","Bursa","Çanakkale","Çankırı","Çorum","Denizli","Diyarbakır","Edirne","Elazığ","Erzincan","Erzurum","Eskişehir","Gaziantep","Giresun","Gümüşhane","Hakkari","Hatay","Isparta","Mersin","İstanbul","İzmir","Kars","Kastamonu","Kayseri","Kırklareli","Kırşehir","Kocaeli","Konya","Kütahya","Malatya","Manisa","Kahramanmaraş","Mardin","Muğla","Muş","Nevşehir","Niğde","Ordu","Rize","Sakarya","Samsun","Siirt","Sinop","Sivas","Tekirdağ","Tokat","Trabzon","Tunceli","Şanlıurfa","Uşak","Van","Yozgat","Zonguldak","Aksaray","Bayburt","Karaman","Kırıkkale","Batman","Şırnak","Bartın","Ardahan","Iğdır","Yalova","Karabük","Kilis","Osmaniye","Düzce"];
+(function(){
+  const sel=document.getElementById("city");
+  const def=document.createElement("option"); def.value=""; def.textContent=T.city; sel.appendChild(def);
+  CITIES.slice().sort((a,b)=>a.localeCompare(b,"tr")).forEach(c=>{
+    const o=document.createElement("option"); o.value=c; o.textContent=c; sel.appendChild(o);
+  });
+})();
 
 // captcha
 const POOL=["🍎","⭐","🚗","🐶","🌸","⚽","🔑","🎈","🍕","🌙"];
