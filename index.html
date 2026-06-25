@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="robots" content="noindex,nofollow">
+<title>Nova · Doğrulama</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root{
+    --bg:#17212b; --fg:#fff; --hint:#8a98a5; --card:#1e2a36;
+    --accent:#3390ec; --accent2:#2b7fd4; --ok:#4dcb6d; --line:#2a3744;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:480px;margin:0 auto;padding:20px 16px 40px;min-height:100vh}
+  h1{font-size:21px;margin:6px 0 2px;text-align:center}
+  .sub{color:var(--hint);font-size:13px;text-align:center;margin-bottom:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+  .label{font-size:14px;font-weight:600;margin-bottom:10px}
+  .check{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:14px;line-height:1.4}
+  .check input{margin-top:2px;width:18px;height:18px;accent-color:var(--accent)}
+  .emojis{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+  .emoji{font-size:30px;background:#26333f;border:2px solid transparent;border-radius:12px;
+    width:54px;height:54px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s}
+  .emoji.sel{border-color:var(--accent);background:#21405e}
+  .emoji.bad{border-color:#e25555;animation:shake .3s}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+  .grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+  .chip{padding:9px 13px;border-radius:20px;background:#26333f;border:1px solid var(--line);
+    font-size:13px;cursor:pointer;transition:.12s}
+  .chip.sel{background:var(--accent);border-color:var(--accent);color:#fff}
+  input[type=text]{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);
+    background:#26333f;color:var(--fg);font-size:14px;margin-top:4px}
+  input[type=text]::placeholder{color:var(--hint)}
+  .btn{width:100%;padding:14px;border:0;border-radius:12px;background:var(--accent);color:#fff;
+    font-size:16px;font-weight:600;cursor:pointer;margin-top:18px;transition:.15s}
+  .btn:disabled{background:#33414e;color:#73818e;cursor:not-allowed}
+  .skip{display:block;text-align:center;color:var(--hint);font-size:13px;margin-top:12px;cursor:pointer;text-decoration:underline}
+  .hidden{display:none}
+  .ok-screen{text-align:center;padding-top:60px}
+  .ok-screen .big{font-size:64px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- STEP 1: gate -->
+  <div id="step1">
+    <h1 id="t_title">🔒 Üyelik Doğrulaması</h1>
+    <div class="sub" id="t_sub">Gruba katılmadan önce kısa bir doğrulama.</div>
+
+    <div class="card">
+      <label class="check">
+        <input type="checkbox" id="age">
+        <span id="t_age">18 yaşından büyüğüm ve yetişkin içerikli bir topluluğa katıldığımı kabul ediyorum.</span>
+      </label>
+    </div>
+
+    <div class="card">
+      <label class="check">
+        <input type="checkbox" id="rules">
+        <span id="t_rules">Grup kurallarına uyacağımı, spam/reklam yapmayacağımı kabul ediyorum.</span>
+      </label>
+    </div>
+
+    <div class="card">
+      <div class="label" id="t_cap">Robot değilim: aşağıdaki <b id="cap_target">🍎</b> sembolüne dokun</div>
+      <div class="emojis" id="emojis"></div>
+    </div>
+
+    <button class="btn" id="next" disabled>Devam</button>
+  </div>
+
+  <!-- STEP 2: onboarding -->
+  <div id="step2" class="hidden">
+    <h1 id="t_o_title">👤 Birkaç kısa soru</h1>
+    <div class="sub" id="t_o_sub">İsteğe bağlı — eşleşme ve öneriler için. Atlayabilirsin.</div>
+
+    <div class="card">
+      <div class="label" id="t_gender">Profil</div>
+      <div class="grid" id="g_gender"></div>
+    </div>
+    <div class="card">
+      <div class="label" id="t_role">İlgi / Rol</div>
+      <div class="grid" id="g_role"></div>
+    </div>
+    <div class="card">
+      <div class="label" id="t_intent">Amaç</div>
+      <div class="grid" id="g_intent"></div>
+    </div>
+    <div class="card">
+      <div class="label" id="t_city">Şehir</div>
+      <input type="text" id="city" placeholder="örn. İstanbul" maxlength="40">
+    </div>
+
+    <button class="btn" id="submit">Tamamla ve Katıl</button>
+    <span class="skip" id="skip">Soruları atla, sadece katıl</span>
+  </div>
+
+  <!-- DONE -->
+  <div id="done" class="ok-screen hidden">
+    <div class="big">✅</div>
+    <h1 id="t_done">Doğrulandı!</h1>
+    <div class="sub" id="t_done_sub">İsteğin onaylanıyor, birazdan gruba ekleneceksin.</div>
+  </div>
+
+</div>
+
+<script>
+const tg = window.Telegram?.WebApp;
+try{ tg?.ready(); tg?.expand(); }catch(e){}
+
+// ---- i18n ----
+const LANG = (tg?.initDataUnsafe?.user?.language_code || "tr").slice(0,2);
+const I18N = {
+  tr:{title:"🔒 Üyelik Doğrulaması",sub:"Gruba katılmadan önce kısa bir doğrulama.",
+    age:"18 yaşından büyüğüm ve yetişkin içerikli bir topluluğa katıldığımı kabul ediyorum.",
+    rules:"Grup kurallarına uyacağımı, spam/reklam yapmayacağımı kabul ediyorum.",
+    cap:'Robot değilim: aşağıdaki <b id="cap_target"></b> sembolüne dokun',next:"Devam",
+    o_title:"👤 Birkaç kısa soru",o_sub:"İsteğe bağlı — eşleşme ve öneriler için. Atlayabilirsin.",
+    gender:"Profil",role:"İlgi / Rol",intent:"Amaç",city:"Şehir",cityph:"örn. İstanbul",
+    submit:"Tamamla ve Katıl",skip:"Soruları atla, sadece katıl",
+    done:"Doğrulandı!",done_sub:"İsteğin onaylanıyor, birazdan gruba ekleneceksin.",
+    genders:["Kadın","Erkek","Çift","Trans","Diğer"],
+    roles:["Hotwife","Cuckold","Bull","Swinger","Tek","İzleyici"],
+    intents:["Sohbet","Arkadaşlık","Buluşma","Sadece izlerim"]},
+  en:{title:"🔒 Membership Verification",sub:"A quick check before you join the group.",
+    age:"I am over 18 and accept joining an adult community.",
+    rules:"I agree to follow the group rules and not to spam/advertise.",
+    cap:'I am not a robot: tap the <b id="cap_target"></b> symbol below',next:"Continue",
+    o_title:"👤 A few quick questions",o_sub:"Optional — for matching & suggestions. You can skip.",
+    gender:"Profile",role:"Interest / Role",intent:"Goal",city:"City",cityph:"e.g. Istanbul",
+    submit:"Finish & Join",skip:"Skip questions, just join",
+    done:"Verified!",done_sub:"Your request is being approved, you'll be added shortly.",
+    genders:["Woman","Man","Couple","Trans","Other"],
+    roles:["Hotwife","Cuckold","Bull","Swinger","Single","Watcher"],
+    intents:["Chat","Friendship","Meet","Just watching"]}
+};
+const T = I18N[LANG] || I18N.tr;
+
+// apply texts
+const set=(id,html)=>{const e=document.getElementById(id); if(e) e.innerHTML=html;};
+set("t_title",T.title); set("t_sub",T.sub); set("t_age",T.age); set("t_rules",T.rules);
+set("t_cap",T.cap); set("next",T.next);
+set("t_o_title",T.o_title); set("t_o_sub",T.o_sub); set("t_gender",T.gender);
+set("t_role",T.role); set("t_intent",T.intent); set("t_city",T.city);
+set("submit",T.submit); set("skip",T.skip); set("t_done",T.done); set("t_done_sub",T.done_sub);
+document.getElementById("city").placeholder = T.cityph;
+
+// ---- captcha ----
+const POOL=["🍎","⭐","🚗","🐶","🌸","⚽","🔑","🎈","🍕","🌙"];
+let target;
+function buildCaptcha(){
+  const shuffled=[...POOL].sort(()=>Math.random()-0.5).slice(0,5);
+  target=shuffled[Math.floor(Math.random()*shuffled.length)];
+  document.getElementById("cap_target").textContent=target;
+  const box=document.getElementById("emojis"); box.innerHTML="";
+  shuffled.forEach(em=>{
+    const d=document.createElement("div"); d.className="emoji"; d.textContent=em;
+    d.onclick=()=>{
+      if(em===target){ document.querySelectorAll(".emoji").forEach(x=>x.classList.remove("sel","bad"));
+        d.classList.add("sel"); window._cap=true; refresh(); }
+      else{ d.classList.add("bad"); window._cap=false; setTimeout(()=>d.classList.remove("bad"),300);
+        setTimeout(buildCaptcha,350); refresh(); }
+    };
+    box.appendChild(d);
+  });
+}
+buildCaptcha();
+
+// ---- gate validation ----
+const age=document.getElementById("age"), rules=document.getElementById("rules"), next=document.getElementById("next");
+function refresh(){ next.disabled = !(age.checked && rules.checked && window._cap===true); }
+age.onchange=refresh; rules.onchange=refresh;
+
+next.onclick=()=>{ document.getElementById("step1").classList.add("hidden");
+  document.getElementById("step2").classList.remove("hidden"); buildChips(); };
+
+// ---- onboarding chips ----
+const answers={gender:null,role:null,intent:null};
+function chipGroup(containerId,items,key){
+  const c=document.getElementById(containerId); c.innerHTML="";
+  items.forEach(it=>{ const d=document.createElement("div"); d.className="chip"; d.textContent=it;
+    d.onclick=()=>{ [...c.children].forEach(x=>x.classList.remove("sel"));
+      d.classList.add("sel"); answers[key]=it; };
+    c.appendChild(d); });
+}
+function buildChips(){ chipGroup("g_gender",T.genders,"gender");
+  chipGroup("g_role",T.roles,"role"); chipGroup("g_intent",T.intents,"intent"); }
+
+// ---- submit ----
+function finish(skip){
+  const payload={ v:1, ok:true, age_ok:true, rules_ok:true, captcha:true,
+    lang:LANG, gender:skip?null:answers.gender, role:skip?null:answers.role,
+    intent:skip?null:answers.intent, city:skip?null:(document.getElementById("city").value.trim()||null),
+    ts:Date.now() };
+  document.getElementById("step2").classList.add("hidden");
+  document.getElementById("done").classList.remove("hidden");
+  try{ tg.sendData(JSON.stringify(payload)); }catch(e){}
+  setTimeout(()=>{ try{ tg.close(); }catch(e){} }, 1400);
+}
+document.getElementById("submit").onclick=()=>finish(false);
+document.getElementById("skip").onclick=()=>finish(true);
+</script>
+</body>
+</html>
