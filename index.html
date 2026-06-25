@@ -33,6 +33,10 @@
   .btn:disabled{background:#33414e;color:#73818e;cursor:not-allowed}
   .skip{display:block;text-align:center;color:var(--hint);font-size:13px;margin-top:12px;cursor:pointer;text-decoration:underline}
   .hidden{display:none}
+  .progress{height:5px;background:#26333f;border-radius:5px;margin:10px 0 16px;overflow:hidden}
+  .pbar{height:100%;background:var(--accent);width:33%;transition:width .3s}
+  .slide{animation:slidein .28s ease}
+  @keyframes slidein{from{transform:translateX(46px);opacity:0}to{transform:translateX(0);opacity:1}}
   .ok-screen{text-align:center;padding-top:60px}
   .ok-screen .big{font-size:64px}
   html[dir=rtl] .check{flex-direction:row}
@@ -56,11 +60,20 @@
   <div id="step2" class="hidden">
     <h1 id="t_o_title"></h1>
     <div class="sub" id="t_o_sub"></div>
-    <div class="card"><div class="label" id="t_acc"></div><div class="grid" id="g_acc"></div></div>
-    <div class="card" id="card_age1"><div class="label" id="t_age1"></div><input type="text" id="age1" inputmode="numeric" maxlength="2"></div>
-    <div class="card hidden" id="card_age2"><div class="label" id="t_age2"></div><input type="text" id="age2" inputmode="numeric" maxlength="2"></div>
-    <div class="card"><div class="label" id="t_city"></div><input type="text" id="city" maxlength="40"></div>
-    <button class="btn" id="submit"></button>
+    <div class="progress"><div class="pbar" id="pbar"></div></div>
+
+    <div class="slide" id="q_acc">
+      <div class="card"><div class="label" id="t_acc"></div><div class="grid" id="g_acc"></div></div>
+    </div>
+    <div class="slide hidden" id="q_age">
+      <div class="card" id="card_age1"><div class="label" id="t_age1"></div><input type="text" id="age1" inputmode="numeric" maxlength="2"></div>
+      <div class="card hidden" id="card_age2"><div class="label" id="t_age2"></div><input type="text" id="age2" inputmode="numeric" maxlength="2"></div>
+      <button class="btn" id="ageNext"></button>
+    </div>
+    <div class="slide hidden" id="q_city">
+      <div class="card"><div class="label" id="t_city"></div><input type="text" id="city" maxlength="40"></div>
+      <button class="btn" id="submit"></button>
+    </div>
     <span class="skip" id="skip"></span>
   </div>
 
@@ -149,7 +162,7 @@ set("t_cap",T.cap); set("next",T.next);
 set("t_o_title",T.o_title); set("t_o_sub",T.o_sub);
 set("t_acc",X.acc); set("t_age1",X.age); set("t_age2",X.p2); set("t_city",T.city);
 set("submit",T.submit); set("skip",T.skip); set("t_done",T.done); set("t_done_sub",T.done_sub);
-set("done_cta",X.cta); set("closeBtn",T.next);
+set("done_cta",X.cta); set("closeBtn",T.next); set("ageNext",T.next);
 document.getElementById("city").placeholder = T.cityph;
 document.getElementById("age1").placeholder = X.ageph;
 document.getElementById("age2").placeholder = X.ageph;
@@ -176,7 +189,14 @@ buildCaptcha();
 const age=document.getElementById("age"), rules=document.getElementById("rules"), inact=document.getElementById("inact"), next=document.getElementById("next");
 function refresh(){ next.disabled = !(age.checked && rules.checked && inact.checked && window._cap===true); }
 age.onchange=refresh; rules.onchange=refresh; inact.onchange=refresh;
-next.onclick=()=>{ document.getElementById("step1").classList.add("hidden"); document.getElementById("step2").classList.remove("hidden"); buildChips(); };
+// Onboarding as a one-question-at-a-time swipe deck.
+const SLIDES=["q_acc","q_age","q_city"];
+function showSlide(name){
+  SLIDES.forEach(s=>{ document.getElementById(s).classList.toggle("hidden", s!==name); });
+  const idx=SLIDES.indexOf(name);
+  document.getElementById("pbar").style.width=((idx+1)/SLIDES.length*100)+"%";
+}
+next.onclick=()=>{ document.getElementById("step1").classList.add("hidden"); document.getElementById("step2").classList.remove("hidden"); buildChips(); showSlide("q_acc"); };
 
 // Account usage = Nova role_code (woman/man/couple). Couple => two age fields.
 const ROLE_CODES=["woman","man","couple"];
@@ -190,10 +210,12 @@ function buildChips(){
       const couple=(i===2);
       document.getElementById("card_age2").classList.toggle("hidden", !couple);
       set("t_age1", couple ? X.p1 : X.age);
+      setTimeout(()=>showSlide("q_age"), 220);
     };
     c.appendChild(d);
   });
 }
+document.getElementById("ageNext").onclick=()=>showSlide("q_city");
 function ageVal(id){ const v=parseInt((document.getElementById(id).value||"").trim(),10); return (v>=18 && v<=99)? v : null; }
 
 function finish(skip){
