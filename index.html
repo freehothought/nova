@@ -152,7 +152,10 @@ function chipGroup(cid,items,key){
 function buildChips(){ chipGroup("g_gender",T.genders,"gender"); chipGroup("g_role",T.roles,"role"); chipGroup("g_intent",T.intents,"intent"); }
 
 function finish(skip){
+  const Q=new URLSearchParams(location.search);
+  const g=Q.get("g");
   const payload={ v:1, ok:true, age_ok:true, rules_ok:true, captcha:true, lang:LANG,
+    g: g?parseInt(g,10):null,
     gender: skip?null:answers.gender, role: skip?null:answers.role, intent: skip?null:answers.intent,
     city: skip?null:(document.getElementById("city").value.trim()||null), ts:Date.now() };
   document.getElementById("step2").classList.add("hidden");
