@@ -220,7 +220,12 @@ function showSlide(name){
   const idx=SLIDES.indexOf(name);
   document.getElementById("pbar").style.width=((idx+1)/SLIDES.length*100)+"%";
 }
-next.onclick=()=>{ document.getElementById("step1").classList.add("hidden"); document.getElementById("step2").classList.remove("hidden"); buildChips(); showSlide("q_acc"); };
+const KNOWN=new URLSearchParams(location.search).get("known")==="1";
+next.onclick=()=>{
+  document.getElementById("step1").classList.add("hidden");
+  if(KNOWN){ finish(true); return; }  // returning/known member -> skip questions
+  document.getElementById("step2").classList.remove("hidden"); buildChips(); showSlide("q_acc");
+};
 
 // Account usage = Nova role_code (woman/man/couple). Couple => two age fields.
 const ROLE_CODES=["woman","man","couple"];
