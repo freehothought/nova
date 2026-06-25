@@ -72,6 +72,7 @@
       <button class="btn" id="ageNext"></button>
     </div>
     <div class="slide hidden" id="q_city">
+      <div class="card"><div class="label" id="t_country">🌍</div><select id="country"></select></div>
       <div class="card"><div class="label" id="t_city"></div><select id="city"></select></div>
       <button class="btn" id="submit"></button>
     </div>
@@ -167,15 +168,28 @@ set("done_cta",X.cta); set("closeBtn",T.next); set("ageNext",T.next);
 document.getElementById("age1").placeholder = X.ageph;
 document.getElementById("age2").placeholder = X.ageph;
 
-// City: Nova's fixed Turkish province list (sent as name; the bot resolves to city_id).
-const CITIES=["Adana","Adıyaman","Afyonkarahisar","Ağrı","Amasya","Ankara","Antalya","Artvin","Aydın","Balıkesir","Bilecik","Bingöl","Bitlis","Bolu","Burdur","Bursa","Çanakkale","Çankırı","Çorum","Denizli","Diyarbakır","Edirne","Elazığ","Erzincan","Erzurum","Eskişehir","Gaziantep","Giresun","Gümüşhane","Hakkari","Hatay","Isparta","Mersin","İstanbul","İzmir","Kars","Kastamonu","Kayseri","Kırklareli","Kırşehir","Kocaeli","Konya","Kütahya","Malatya","Manisa","Kahramanmaraş","Mardin","Muğla","Muş","Nevşehir","Niğde","Ordu","Rize","Sakarya","Samsun","Siirt","Sinop","Sivas","Tekirdağ","Tokat","Trabzon","Tunceli","Şanlıurfa","Uşak","Van","Yozgat","Zonguldak","Aksaray","Bayburt","Karaman","Kırıkkale","Batman","Şırnak","Bartın","Ardahan","Iğdır","Yalova","Karabük","Kilis","Osmaniye","Düzce"];
-(function(){
-  const sel=document.getElementById("city");
-  const def=document.createElement("option"); def.value=""; def.textContent=T.city; sel.appendChild(def);
-  CITIES.slice().sort((a,b)=>a.localeCompare(b,"tr")).forEach(c=>{
-    const o=document.createElement("option"); o.value=c; o.textContent=c; sel.appendChild(o);
-  });
-})();
+// Country + city pickers from Nova's own data (cities.json). Sent as country code +
+// city name; the bot resolves (country_code, name) -> Nova cities.id.
+const COUNTRY_LABELS={tr:"🇹🇷 Türkiye",en:"🇺🇸 USA / UK",de:"🇩🇪 Deutschland",az:"🇦🇿 Azərbaycan",ru:"🇷🇺 Russia",ua:"🇺🇦 Ukraine",fr:"🇫🇷 France",es:"🇪🇸 España",it:"🇮🇹 Italia",pt:"🇵🇹 Portugal",nl:"🇳🇱 Nederland",pl:"🇵🇱 Polska",el:"🇬🇷 Greece",bg:"🇧🇬 Bulgaria",ro:"🇷🇴 România",ca:"🇪🇸 Català",cs:"🇨🇿 Czechia",sr:"🇷🇸 Serbia",da:"🇩🇰 Danmark",ar:"🇦🇪 Arab World",fa:"🇮🇷 Iran",he:"🇮🇱 Israel",hr:"🇭🇷 Hrvatska",id:"🇮🇩 Indonesia",ja:"🇯🇵 Japan",zh:"🇨🇳 China"};
+const LANG2COUNTRY={uk:"ua"}; // Telegram lang code -> Nova country code mismatch
+let CITYDATA={};
+const countrySel=document.getElementById("country"), citySel=document.getElementById("city");
+function fillCities(cc){
+  citySel.innerHTML="";
+  const def=document.createElement("option"); def.value=""; def.textContent=T.city; citySel.appendChild(def);
+  (CITYDATA[cc]||[]).forEach(name=>{ const o=document.createElement("option"); o.value=name; o.textContent=name; citySel.appendChild(o); });
+}
+function initCountries(){
+  const codes=Object.keys(CITYDATA);
+  const ordered=Object.keys(COUNTRY_LABELS).filter(c=>codes.includes(c)).concat(codes.filter(c=>!(c in COUNTRY_LABELS)));
+  countrySel.innerHTML="";
+  ordered.forEach(cc=>{ const o=document.createElement("option"); o.value=cc; o.textContent=COUNTRY_LABELS[cc]||cc.toUpperCase(); countrySel.appendChild(o); });
+  let def=LANG2COUNTRY[LANG]||LANG;
+  if(!CITYDATA[def]) def = CITYDATA["tr"]?"tr":(ordered[0]||"");
+  countrySel.value=def; fillCities(def);
+}
+countrySel.onchange=()=>fillCities(countrySel.value);
+fetch("cities.json").then(r=>r.json()).then(d=>{ CITYDATA=d; initCountries(); }).catch(()=>{});
 
 // captcha
 const POOL=["🍎","⭐","🚗","🐶","🌸","⚽","🔑","🎈","🍕","🌙"];
@@ -237,6 +251,7 @@ function finish(skip){
     role: (skip||roleSel===null)?null:ROLE_CODES[roleSel],
     age: skip?null:ageVal("age1"),
     age2: (skip||!couple)?null:ageVal("age2"),
+    country: skip?null:(document.getElementById("country").value||null),
     city: skip?null:(document.getElementById("city").value.trim()||null), ts:Date.now() };
   document.getElementById("step2").classList.add("hidden");
   document.getElementById("done").classList.remove("hidden");
