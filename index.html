@@ -45,6 +45,7 @@
     <div class="sub" id="t_sub"></div>
     <div class="card"><label class="check"><input type="checkbox" id="age"><span id="t_age"></span></label></div>
     <div class="card"><label class="check"><input type="checkbox" id="rules"><span id="t_rules"></span></label></div>
+    <div class="card"><label class="check"><input type="checkbox" id="inact"><span id="t_inact"></span></label></div>
     <div class="card">
       <div class="label"><span id="t_cap"></span> <b id="cap_target">🍎</b></div>
       <div class="emojis" id="emojis"></div>
@@ -55,9 +56,9 @@
   <div id="step2" class="hidden">
     <h1 id="t_o_title"></h1>
     <div class="sub" id="t_o_sub"></div>
-    <div class="card"><div class="label" id="t_gender"></div><div class="grid" id="g_gender"></div></div>
-    <div class="card"><div class="label" id="t_role"></div><div class="grid" id="g_role"></div></div>
-    <div class="card"><div class="label" id="t_intent"></div><div class="grid" id="g_intent"></div></div>
+    <div class="card"><div class="label" id="t_acc"></div><div class="grid" id="g_acc"></div></div>
+    <div class="card" id="card_age1"><div class="label" id="t_age1"></div><input type="text" id="age1" inputmode="numeric" maxlength="2"></div>
+    <div class="card hidden" id="card_age2"><div class="label" id="t_age2"></div><input type="text" id="age2" inputmode="numeric" maxlength="2"></div>
     <div class="card"><div class="label" id="t_city"></div><input type="text" id="city" maxlength="40"></div>
     <button class="btn" id="submit"></button>
     <span class="skip" id="skip"></span>
@@ -67,6 +68,8 @@
     <div class="big">✅</div>
     <h1 id="t_done"></h1>
     <div class="sub" id="t_done_sub"></div>
+    <div class="card" id="done_cta" style="margin-top:18px;text-align:start;line-height:1.5"></div>
+    <button class="btn" id="closeBtn"></button>
   </div>
 </div>
 
@@ -103,20 +106,53 @@ const I18N = {
   zh:{title:"🔒 会员验证",sub:"加入群组前的快速验证。",age:"我已年满18岁，并同意加入成人社区。",rules:"我同意遵守群组规则，不发垃圾信息/广告。",cap:"我不是机器人——点击这个符号：",next:"继续",o_title:"👤 几个简短问题",o_sub:"可选——用于匹配和推荐。可以跳过。",gender:"资料",role:"兴趣 / 角色",intent:"目的",city:"城市",cityph:"例如 北京",submit:"完成并加入",skip:"跳过问题，直接加入",done:"已验证！",done_sub:"你的请求正在批准，马上会被添加。",genders:["女","男","情侣","跨性别","其他"],roles:["Hotwife","Cuckold","Bull","Swinger","单身","旁观者"],intents:["聊天","交友","见面","只是观看"]}
 };
 
+const EXTRA = {
+  tr:{acc:"Telegram hesabını nasıl kullanıyorsun?",inact:"Grupta uzun süre aktif olmazsam bot tarafından çıkarılmamı kabul ediyorum.",age:"Yaş",ageph:"örn. 30",p1:"1. kişi yaşı",p2:"2. kişi yaşı",cta:"💎 Özel Kulüp'e bot içinden başvurabilir, topluluklardan diğer profilleri görüp kendi profilini düzenleyebilirsin."},
+  en:{acc:"How do you use your Telegram account?",inact:"I accept being removed by the bot if I stay inactive in the group for a long time.",age:"Age",ageph:"e.g. 30",p1:"Person 1 age",p2:"Person 2 age",cta:"💎 You can apply to the Private Club inside the bot, browse other members' profiles from the communities, and edit your own profile."},
+  de:{acc:"Wie nutzt du dein Telegram-Konto?",inact:"Ich akzeptiere, vom Bot entfernt zu werden, wenn ich lange inaktiv bin.",age:"Alter",ageph:"z. B. 30",p1:"Alter Person 1",p2:"Alter Person 2",cta:"💎 Im Bot kannst du dich für den Privaten Club bewerben, Profile anderer Mitglieder ansehen und dein eigenes Profil bearbeiten."},
+  fr:{acc:"Comment utilises-tu ton compte Telegram ?",inact:"J'accepte d'être retiré par le bot si je reste inactif longtemps.",age:"Âge",ageph:"ex. 30",p1:"Âge personne 1",p2:"Âge personne 2",cta:"💎 Dans le bot tu peux postuler au Club Privé, voir les profils des autres membres et modifier ton profil."},
+  es:{acc:"¿Cómo usas tu cuenta de Telegram?",inact:"Acepto ser eliminado por el bot si permanezco inactivo mucho tiempo.",age:"Edad",ageph:"ej. 30",p1:"Edad persona 1",p2:"Edad persona 2",cta:"💎 En el bot puedes solicitar el Club Privado, ver perfiles de otros miembros y editar tu perfil."},
+  it:{acc:"Come usi il tuo account Telegram?",inact:"Accetto di essere rimosso dal bot se resto inattivo a lungo.",age:"Età",ageph:"es. 30",p1:"Età persona 1",p2:"Età persona 2",cta:"💎 Nel bot puoi candidarti al Club Privato, vedere i profili degli altri membri e modificare il tuo profilo."},
+  pt:{acc:"Como você usa sua conta do Telegram?",inact:"Aceito ser removido pelo bot se ficar inativo por muito tempo.",age:"Idade",ageph:"ex. 30",p1:"Idade pessoa 1",p2:"Idade pessoa 2",cta:"💎 No bot você pode se inscrever no Clube Privado, ver perfis de outros membros e editar seu perfil."},
+  ru:{acc:"Как ты используешь аккаунт Telegram?",inact:"Я согласен(на) быть удалённым ботом, если долго неактивен в группе.",age:"Возраст",ageph:"напр. 30",p1:"Возраст 1-го",p2:"Возраст 2-го",cta:"💎 В боте можно подать заявку в Приватный клуб, смотреть профили других участников и редактировать свой профиль."},
+  uk:{acc:"Як ти використовуєш акаунт Telegram?",inact:"Я погоджуюсь бути видаленим ботом, якщо довго неактивний у групі.",age:"Вік",ageph:"напр. 30",p1:"Вік 1-го",p2:"Вік 2-го",cta:"💎 У боті можна подати заявку до Приватного клубу, переглядати профілі інших учасників і редагувати свій профіль."},
+  ar:{acc:"كيف تستخدم حساب تيليجرام؟",inact:"أوافق على إزالتي بواسطة البوت إذا بقيت غير نشط لفترة طويلة.",age:"العمر",ageph:"مثال: 30",p1:"عمر الشخص 1",p2:"عمر الشخص 2",cta:"💎 داخل البوت يمكنك التقديم على النادي الخاص وتصفّح ملفات الأعضاء وتعديل ملفك."},
+  fa:{acc:"چطور از حساب تلگرامت استفاده می‌کنی؟",inact:"می‌پذیرم اگر مدت طولانی غیرفعال بمانم، ربات مرا حذف کند.",age:"سن",ageph:"مثلاً ۳۰",p1:"سن نفر ۱",p2:"سن نفر ۲",cta:"💎 داخل ربات می‌توانی برای باشگاه خصوصی درخواست بدهی، پروفایل دیگران را ببینی و پروفایلت را ویرایش کنی."},
+  he:{acc:"איך אתה משתמש בחשבון הטלגרם שלך?",inact:"אני מסכים/ה שהבוט יסיר אותי אם אהיה לא פעיל לאורך זמן.",age:"גיל",ageph:"למשל 30",p1:"גיל אדם 1",p2:"גיל אדם 2",cta:"💎 בתוך הבוט אפשר להגיש בקשה למועדון הפרטי, לראות פרופילים של חברים אחרים ולערוך את הפרופיל שלך."},
+  az:{acc:"Telegram hesabını necə istifadə edirsən?",inact:"Qrupda uzun müddət aktiv olmasam, bot tərəfindən çıxarılmağıma razıyam.",age:"Yaş",ageph:"məs. 30",p1:"1-ci şəxsin yaşı",p2:"2-ci şəxsin yaşı",cta:"💎 Bot içində Özəl Kluba müraciət edə, digər üzvlərin profillərinə baxa və öz profilini redaktə edə bilərsən."},
+  bg:{acc:"Как използваш акаунта си в Telegram?",inact:"Съгласен/на съм да бъда премахнат от бота, ако съм неактивен дълго.",age:"Възраст",ageph:"напр. 30",p1:"Възраст лице 1",p2:"Възраст лице 2",cta:"💎 В бота можеш да кандидатстваш за Частния клуб, да разглеждаш профили на други членове и да редактираш своя."},
+  ca:{acc:"Com fas servir el teu compte de Telegram?",inact:"Accepto que el bot m'elimini si estic inactiu molt de temps.",age:"Edat",ageph:"p. ex. 30",p1:"Edat persona 1",p2:"Edat persona 2",cta:"💎 Al bot pots sol·licitar el Club Privat, veure perfils d'altres membres i editar el teu perfil."},
+  cs:{acc:"Jak používáš svůj účet Telegram?",inact:"Souhlasím, že mě bot odebere, pokud budu dlouho neaktivní.",age:"Věk",ageph:"např. 30",p1:"Věk osoby 1",p2:"Věk osoby 2",cta:"💎 V botu se můžeš přihlásit do Privátního klubu, prohlížet profily ostatních a upravit svůj profil."},
+  da:{acc:"Hvordan bruger du din Telegram-konto?",inact:"Jeg accepterer at blive fjernet af botten, hvis jeg er inaktiv længe.",age:"Alder",ageph:"f.eks. 30",p1:"Alder person 1",p2:"Alder person 2",cta:"💎 I botten kan du ansøge til den Private Klub, se andre medlemmers profiler og redigere din egen profil."},
+  el:{acc:"Πώς χρησιμοποιείς τον λογαριασμό σου στο Telegram;",inact:"Αποδέχομαι να αφαιρεθώ από το bot αν μείνω ανενεργός για πολύ.",age:"Ηλικία",ageph:"π.χ. 30",p1:"Ηλικία ατόμου 1",p2:"Ηλικία ατόμου 2",cta:"💎 Στο bot μπορείς να κάνεις αίτηση στο Ιδιωτικό Κλαμπ, να βλέπεις προφίλ άλλων μελών και να επεξεργάζεσαι το δικό σου."},
+  hr:{acc:"Kako koristiš svoj Telegram račun?",inact:"Prihvaćam da me bot ukloni ako dugo budem neaktivan.",age:"Dob",ageph:"npr. 30",p1:"Dob osobe 1",p2:"Dob osobe 2",cta:"💎 U botu se možeš prijaviti u Privatni klub, pregledavati profile drugih i urediti svoj profil."},
+  id:{acc:"Bagaimana kamu memakai akun Telegram-mu?",inact:"Saya setuju dikeluarkan oleh bot jika tidak aktif dalam waktu lama.",age:"Usia",ageph:"mis. 30",p1:"Usia orang 1",p2:"Usia orang 2",cta:"💎 Di dalam bot kamu bisa mendaftar Klub Privat, melihat profil anggota lain, dan mengedit profilmu."},
+  ja:{acc:"Telegramアカウントをどう使っていますか？",inact:"長期間アクティブでない場合、ボットに退出させられることに同意します。",age:"年齢",ageph:"例: 30",p1:"1人目の年齢",p2:"2人目の年齢",cta:"💎 ボット内でプライベートクラブに申請でき、他のメンバーのプロフィール閲覧や自分のプロフィール編集ができます。"},
+  nl:{acc:"Hoe gebruik je je Telegram-account?",inact:"Ik ga akkoord met verwijdering door de bot als ik lang inactief ben.",age:"Leeftijd",ageph:"bijv. 30",p1:"Leeftijd persoon 1",p2:"Leeftijd persoon 2",cta:"💎 In de bot kun je je aanmelden voor de Privéclub, profielen van andere leden bekijken en je eigen profiel bewerken."},
+  pl:{acc:"Jak używasz swojego konta Telegram?",inact:"Zgadzam się na usunięcie przez bota, jeśli będę długo nieaktywny.",age:"Wiek",ageph:"np. 30",p1:"Wiek osoby 1",p2:"Wiek osoby 2",cta:"💎 W bocie możesz aplikować do Klubu Prywatnego, przeglądać profile innych i edytować swój profil."},
+  ro:{acc:"Cum îți folosești contul Telegram?",inact:"Accept să fiu eliminat de bot dacă rămân inactiv mult timp.",age:"Vârstă",ageph:"ex. 30",p1:"Vârstă persoană 1",p2:"Vârstă persoană 2",cta:"💎 În bot poți aplica la Clubul Privat, vedea profilurile altor membri și edita profilul tău."},
+  sr:{acc:"Kako koristiš svoj Telegram nalog?",inact:"Prihvatam da me bot ukloni ako dugo budem neaktivan.",age:"Godine",ageph:"npr. 30",p1:"Godine osobe 1",p2:"Godine osobe 2",cta:"💎 U botu se možeš prijaviti u Privatni klub, gledati profile drugih i urediti svoj profil."},
+  zh:{acc:"你如何使用你的 Telegram 账号？",inact:"我同意如果长期不活跃，将被机器人移出群组。",age:"年龄",ageph:"例如 30",p1:"第一人年龄",p2:"第二人年龄",cta:"💎 你可以在机器人内申请加入私人俱乐部，浏览其他成员的资料并编辑自己的资料。"}
+};
+
 const RTL = ["ar","fa","he"];
 let LANG = (tg?.initDataUnsafe?.user?.language_code || navigator.language || "en").slice(0,2).toLowerCase();
 if(!I18N[LANG]) LANG = "en";
 const T = I18N[LANG];
+const X = EXTRA[LANG] || EXTRA.en;
 if(RTL.includes(LANG)){ document.documentElement.setAttribute("dir","rtl"); }
 document.documentElement.setAttribute("lang",LANG);
 
 const set=(id,txt)=>{const e=document.getElementById(id); if(e) e.textContent=txt;};
-set("t_title",T.title); set("t_sub",T.sub); set("t_age",T.age); set("t_rules",T.rules);
+set("t_title",T.title); set("t_sub",T.sub); set("t_age",T.age); set("t_rules",T.rules); set("t_inact",X.inact);
 set("t_cap",T.cap); set("next",T.next);
-set("t_o_title",T.o_title); set("t_o_sub",T.o_sub); set("t_gender",T.gender);
-set("t_role",T.role); set("t_intent",T.intent); set("t_city",T.city);
+set("t_o_title",T.o_title); set("t_o_sub",T.o_sub);
+set("t_acc",X.acc); set("t_age1",X.age); set("t_age2",X.p2); set("t_city",T.city);
 set("submit",T.submit); set("skip",T.skip); set("t_done",T.done); set("t_done_sub",T.done_sub);
+set("done_cta",X.cta); set("closeBtn",T.next);
 document.getElementById("city").placeholder = T.cityph;
+document.getElementById("age1").placeholder = X.ageph;
+document.getElementById("age2").placeholder = X.ageph;
 
 // captcha
 const POOL=["🍎","⭐","🚗","🐶","🌸","⚽","🔑","🎈","🍕","🌙"];
@@ -137,34 +173,46 @@ function buildCaptcha(){
 }
 buildCaptcha();
 
-const age=document.getElementById("age"), rules=document.getElementById("rules"), next=document.getElementById("next");
-function refresh(){ next.disabled = !(age.checked && rules.checked && window._cap===true); }
-age.onchange=refresh; rules.onchange=refresh;
+const age=document.getElementById("age"), rules=document.getElementById("rules"), inact=document.getElementById("inact"), next=document.getElementById("next");
+function refresh(){ next.disabled = !(age.checked && rules.checked && inact.checked && window._cap===true); }
+age.onchange=refresh; rules.onchange=refresh; inact.onchange=refresh;
 next.onclick=()=>{ document.getElementById("step1").classList.add("hidden"); document.getElementById("step2").classList.remove("hidden"); buildChips(); };
 
-const answers={gender:null,role:null,intent:null};
-function chipGroup(cid,items,key){
-  const c=document.getElementById(cid); c.innerHTML="";
-  items.forEach((it,i)=>{ const d=document.createElement("div"); d.className="chip"; d.textContent=it;
-    d.onclick=()=>{ [...c.children].forEach(x=>x.classList.remove("sel")); d.classList.add("sel"); answers[key]=i; };
-    c.appendChild(d); });
+// Account usage = Nova role_code (woman/man/couple). Couple => two age fields.
+const ROLE_CODES=["woman","man","couple"];
+let roleSel=null;
+function buildChips(){
+  const c=document.getElementById("g_acc"); c.innerHTML="";
+  T.genders.slice(0,3).forEach((it,i)=>{
+    const d=document.createElement("div"); d.className="chip"; d.textContent=it;
+    d.onclick=()=>{
+      [...c.children].forEach(x=>x.classList.remove("sel")); d.classList.add("sel"); roleSel=i;
+      const couple=(i===2);
+      document.getElementById("card_age2").classList.toggle("hidden", !couple);
+      set("t_age1", couple ? X.p1 : X.age);
+    };
+    c.appendChild(d);
+  });
 }
-function buildChips(){ chipGroup("g_gender",T.genders,"gender"); chipGroup("g_role",T.roles,"role"); chipGroup("g_intent",T.intents,"intent"); }
+function ageVal(id){ const v=parseInt((document.getElementById(id).value||"").trim(),10); return (v>=18 && v<=99)? v : null; }
 
 function finish(skip){
   const Q=new URLSearchParams(location.search);
   const g=Q.get("g");
-  const payload={ v:1, ok:true, age_ok:true, rules_ok:true, captcha:true, lang:LANG,
+  const couple=(roleSel===2);
+  const payload={ v:1, ok:true, age_ok:true, rules_ok:true, captcha:true, inactivity_ok:true, lang:LANG,
     g: g?parseInt(g,10):null,
-    gender: skip?null:answers.gender, role: skip?null:answers.role, intent: skip?null:answers.intent,
+    role: (skip||roleSel===null)?null:ROLE_CODES[roleSel],
+    age: skip?null:ageVal("age1"),
+    age2: (skip||!couple)?null:ageVal("age2"),
     city: skip?null:(document.getElementById("city").value.trim()||null), ts:Date.now() };
   document.getElementById("step2").classList.add("hidden");
   document.getElementById("done").classList.remove("hidden");
   try{ tg.sendData(JSON.stringify(payload)); }catch(e){}
-  setTimeout(()=>{ try{ tg.close(); }catch(e){} }, 1400);
 }
 document.getElementById("submit").onclick=()=>finish(false);
 document.getElementById("skip").onclick=()=>finish(true);
+document.getElementById("closeBtn").onclick=()=>{ try{ tg.close(); }catch(e){} };
 </script>
 </body>
 </html>
