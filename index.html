@@ -4,13 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="robots" content="noindex,nofollow">
-<title>Nova · Doğrulama</title>
+<title>Nova · Verify</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  :root{
-    --bg:#17212b; --fg:#fff; --hint:#8a98a5; --card:#1e2a36;
-    --accent:#3390ec; --accent2:#2b7fd4; --ok:#4dcb6d; --line:#2a3744;
-  }
+  :root{--bg:#17212b;--fg:#fff;--hint:#8a98a5;--card:#1e2a36;--accent:#3390ec;--ok:#4dcb6d;--line:#2a3744}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
@@ -20,7 +17,7 @@
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
   .label{font-size:14px;font-weight:600;margin-bottom:10px}
   .check{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:14px;line-height:1.4}
-  .check input{margin-top:2px;width:18px;height:18px;accent-color:var(--accent)}
+  .check input{margin-top:2px;width:18px;height:18px;accent-color:var(--accent);flex:0 0 auto}
   .emojis{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px}
   .emoji{font-size:30px;background:#26333f;border:2px solid transparent;border-radius:12px;
     width:54px;height:54px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s}
@@ -28,120 +25,92 @@
   .emoji.bad{border-color:#e25555;animation:shake .3s}
   @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
   .grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
-  .chip{padding:9px 13px;border-radius:20px;background:#26333f;border:1px solid var(--line);
-    font-size:13px;cursor:pointer;transition:.12s}
+  .chip{padding:9px 13px;border-radius:20px;background:#26333f;border:1px solid var(--line);font-size:13px;cursor:pointer;transition:.12s}
   .chip.sel{background:var(--accent);border-color:var(--accent);color:#fff}
-  input[type=text]{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);
-    background:#26333f;color:var(--fg);font-size:14px;margin-top:4px}
+  input[type=text]{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#26333f;color:var(--fg);font-size:14px;margin-top:4px}
   input[type=text]::placeholder{color:var(--hint)}
-  .btn{width:100%;padding:14px;border:0;border-radius:12px;background:var(--accent);color:#fff;
-    font-size:16px;font-weight:600;cursor:pointer;margin-top:18px;transition:.15s}
+  .btn{width:100%;padding:14px;border:0;border-radius:12px;background:var(--accent);color:#fff;font-size:16px;font-weight:600;cursor:pointer;margin-top:18px;transition:.15s}
   .btn:disabled{background:#33414e;color:#73818e;cursor:not-allowed}
   .skip{display:block;text-align:center;color:var(--hint);font-size:13px;margin-top:12px;cursor:pointer;text-decoration:underline}
   .hidden{display:none}
   .ok-screen{text-align:center;padding-top:60px}
   .ok-screen .big{font-size:64px}
+  html[dir=rtl] .check{flex-direction:row}
 </style>
 </head>
 <body>
 <div class="wrap">
-
-  <!-- STEP 1: gate -->
   <div id="step1">
-    <h1 id="t_title">🔒 Üyelik Doğrulaması</h1>
-    <div class="sub" id="t_sub">Gruba katılmadan önce kısa bir doğrulama.</div>
-
+    <h1 id="t_title"></h1>
+    <div class="sub" id="t_sub"></div>
+    <div class="card"><label class="check"><input type="checkbox" id="age"><span id="t_age"></span></label></div>
+    <div class="card"><label class="check"><input type="checkbox" id="rules"><span id="t_rules"></span></label></div>
     <div class="card">
-      <label class="check">
-        <input type="checkbox" id="age">
-        <span id="t_age">18 yaşından büyüğüm ve yetişkin içerikli bir topluluğa katıldığımı kabul ediyorum.</span>
-      </label>
-    </div>
-
-    <div class="card">
-      <label class="check">
-        <input type="checkbox" id="rules">
-        <span id="t_rules">Grup kurallarına uyacağımı, spam/reklam yapmayacağımı kabul ediyorum.</span>
-      </label>
-    </div>
-
-    <div class="card">
-      <div class="label" id="t_cap">Robot değilim: aşağıdaki <b id="cap_target">🍎</b> sembolüne dokun</div>
+      <div class="label"><span id="t_cap"></span> <b id="cap_target">🍎</b></div>
       <div class="emojis" id="emojis"></div>
     </div>
-
-    <button class="btn" id="next" disabled>Devam</button>
+    <button class="btn" id="next" disabled></button>
   </div>
 
-  <!-- STEP 2: onboarding -->
   <div id="step2" class="hidden">
-    <h1 id="t_o_title">👤 Birkaç kısa soru</h1>
-    <div class="sub" id="t_o_sub">İsteğe bağlı — eşleşme ve öneriler için. Atlayabilirsin.</div>
-
-    <div class="card">
-      <div class="label" id="t_gender">Profil</div>
-      <div class="grid" id="g_gender"></div>
-    </div>
-    <div class="card">
-      <div class="label" id="t_role">İlgi / Rol</div>
-      <div class="grid" id="g_role"></div>
-    </div>
-    <div class="card">
-      <div class="label" id="t_intent">Amaç</div>
-      <div class="grid" id="g_intent"></div>
-    </div>
-    <div class="card">
-      <div class="label" id="t_city">Şehir</div>
-      <input type="text" id="city" placeholder="örn. İstanbul" maxlength="40">
-    </div>
-
-    <button class="btn" id="submit">Tamamla ve Katıl</button>
-    <span class="skip" id="skip">Soruları atla, sadece katıl</span>
+    <h1 id="t_o_title"></h1>
+    <div class="sub" id="t_o_sub"></div>
+    <div class="card"><div class="label" id="t_gender"></div><div class="grid" id="g_gender"></div></div>
+    <div class="card"><div class="label" id="t_role"></div><div class="grid" id="g_role"></div></div>
+    <div class="card"><div class="label" id="t_intent"></div><div class="grid" id="g_intent"></div></div>
+    <div class="card"><div class="label" id="t_city"></div><input type="text" id="city" maxlength="40"></div>
+    <button class="btn" id="submit"></button>
+    <span class="skip" id="skip"></span>
   </div>
 
-  <!-- DONE -->
   <div id="done" class="ok-screen hidden">
     <div class="big">✅</div>
-    <h1 id="t_done">Doğrulandı!</h1>
-    <div class="sub" id="t_done_sub">İsteğin onaylanıyor, birazdan gruba ekleneceksin.</div>
+    <h1 id="t_done"></h1>
+    <div class="sub" id="t_done_sub"></div>
   </div>
-
 </div>
 
 <script>
 const tg = window.Telegram?.WebApp;
 try{ tg?.ready(); tg?.expand(); }catch(e){}
 
-// ---- i18n ----
-const LANG = (tg?.initDataUnsafe?.user?.language_code || "tr").slice(0,2);
 const I18N = {
-  tr:{title:"🔒 Üyelik Doğrulaması",sub:"Gruba katılmadan önce kısa bir doğrulama.",
-    age:"18 yaşından büyüğüm ve yetişkin içerikli bir topluluğa katıldığımı kabul ediyorum.",
-    rules:"Grup kurallarına uyacağımı, spam/reklam yapmayacağımı kabul ediyorum.",
-    cap:'Robot değilim: aşağıdaki <b id="cap_target"></b> sembolüne dokun',next:"Devam",
-    o_title:"👤 Birkaç kısa soru",o_sub:"İsteğe bağlı — eşleşme ve öneriler için. Atlayabilirsin.",
-    gender:"Profil",role:"İlgi / Rol",intent:"Amaç",city:"Şehir",cityph:"örn. İstanbul",
-    submit:"Tamamla ve Katıl",skip:"Soruları atla, sadece katıl",
-    done:"Doğrulandı!",done_sub:"İsteğin onaylanıyor, birazdan gruba ekleneceksin.",
-    genders:["Kadın","Erkek","Çift","Trans","Diğer"],
-    roles:["Hotwife","Cuckold","Bull","Swinger","Tek","İzleyici"],
-    intents:["Sohbet","Arkadaşlık","Buluşma","Sadece izlerim"]},
-  en:{title:"🔒 Membership Verification",sub:"A quick check before you join the group.",
-    age:"I am over 18 and accept joining an adult community.",
-    rules:"I agree to follow the group rules and not to spam/advertise.",
-    cap:'I am not a robot: tap the <b id="cap_target"></b> symbol below',next:"Continue",
-    o_title:"👤 A few quick questions",o_sub:"Optional — for matching & suggestions. You can skip.",
-    gender:"Profile",role:"Interest / Role",intent:"Goal",city:"City",cityph:"e.g. Istanbul",
-    submit:"Finish & Join",skip:"Skip questions, just join",
-    done:"Verified!",done_sub:"Your request is being approved, you'll be added shortly.",
-    genders:["Woman","Man","Couple","Trans","Other"],
-    roles:["Hotwife","Cuckold","Bull","Swinger","Single","Watcher"],
-    intents:["Chat","Friendship","Meet","Just watching"]}
+  tr:{title:"🔒 Üyelik Doğrulaması",sub:"Gruba katılmadan önce kısa bir doğrulama.",age:"18 yaşından büyüğüm ve yetişkin bir topluluğa katıldığımı kabul ediyorum.",rules:"Grup kurallarına uyacağımı, spam/reklam yapmayacağımı kabul ediyorum.",cap:"Robot değilim — şu sembole dokun:",next:"Devam",o_title:"👤 Birkaç kısa soru",o_sub:"İsteğe bağlı — eşleşme ve öneriler için. Atlayabilirsin.",gender:"Profil",role:"İlgi / Rol",intent:"Amaç",city:"Şehir",cityph:"örn. İstanbul",submit:"Tamamla ve Katıl",skip:"Soruları atla, sadece katıl",done:"Doğrulandı!",done_sub:"İsteğin onaylanıyor, birazdan gruba ekleneceksin.",genders:["Kadın","Erkek","Çift","Trans","Diğer"],roles:["Hotwife","Cuckold","Bull","Swinger","Tek","İzleyici"],intents:["Sohbet","Arkadaşlık","Buluşma","Sadece izlerim"]},
+  en:{title:"🔒 Membership Verification",sub:"A quick check before you join the group.",age:"I am over 18 and accept joining an adult community.",rules:"I agree to follow the group rules and not to spam/advertise.",cap:"I am not a robot — tap this symbol:",next:"Continue",o_title:"👤 A few quick questions",o_sub:"Optional — for matching & suggestions. You can skip.",gender:"Profile",role:"Interest / Role",intent:"Goal",city:"City",cityph:"e.g. London",submit:"Finish & Join",skip:"Skip questions, just join",done:"Verified!",done_sub:"Your request is being approved, you'll be added shortly.",genders:["Woman","Man","Couple","Trans","Other"],roles:["Hotwife","Cuckold","Bull","Swinger","Single","Watcher"],intents:["Chat","Friendship","Meet","Just watching"]},
+  de:{title:"🔒 Mitgliedschaftsprüfung",sub:"Eine kurze Prüfung, bevor du der Gruppe beitrittst.",age:"Ich bin über 18 und akzeptiere den Beitritt zu einer Erwachsenen-Community.",rules:"Ich stimme zu, die Gruppenregeln zu befolgen und keinen Spam/Werbung zu machen.",cap:"Ich bin kein Roboter — tippe auf dieses Symbol:",next:"Weiter",o_title:"👤 Ein paar kurze Fragen",o_sub:"Optional — für Matching & Vorschläge. Du kannst überspringen.",gender:"Profil",role:"Interesse / Rolle",intent:"Ziel",city:"Stadt",cityph:"z. B. Berlin",submit:"Abschließen & Beitreten",skip:"Fragen überspringen, einfach beitreten",done:"Verifiziert!",done_sub:"Deine Anfrage wird genehmigt, du wirst gleich hinzugefügt.",genders:["Frau","Mann","Paar","Trans","Andere"],roles:["Hotwife","Cuckold","Bull","Swinger","Single","Zuschauer"],intents:["Chatten","Freundschaft","Treffen","Nur zuschauen"]},
+  fr:{title:"🔒 Vérification d'adhésion",sub:"Une vérification rapide avant de rejoindre le groupe.",age:"J'ai plus de 18 ans et j'accepte de rejoindre une communauté pour adultes.",rules:"J'accepte de suivre les règles du groupe et de ne pas spammer/faire de pub.",cap:"Je ne suis pas un robot — touche ce symbole :",next:"Continuer",o_title:"👤 Quelques questions rapides",o_sub:"Facultatif — pour le matching et les suggestions. Tu peux passer.",gender:"Profil",role:"Intérêt / Rôle",intent:"Objectif",city:"Ville",cityph:"ex. Paris",submit:"Terminer et rejoindre",skip:"Passer les questions, juste rejoindre",done:"Vérifié !",done_sub:"Ta demande est en cours d'approbation, tu seras ajouté bientôt.",genders:["Femme","Homme","Couple","Trans","Autre"],roles:["Hotwife","Cuckold","Bull","Swinger","Célibataire","Spectateur"],intents:["Discuter","Amitié","Rencontre","Juste regarder"]},
+  es:{title:"🔒 Verificación de membresía",sub:"Una comprobación rápida antes de unirte al grupo.",age:"Soy mayor de 18 y acepto unirme a una comunidad para adultos.",rules:"Acepto seguir las reglas del grupo y no hacer spam/publicidad.",cap:"No soy un robot — toca este símbolo:",next:"Continuar",o_title:"👤 Unas preguntas rápidas",o_sub:"Opcional — para coincidencias y sugerencias. Puedes omitir.",gender:"Perfil",role:"Interés / Rol",intent:"Objetivo",city:"Ciudad",cityph:"ej. Madrid",submit:"Finalizar y unirse",skip:"Omitir preguntas, solo unirse",done:"¡Verificado!",done_sub:"Tu solicitud se está aprobando, te añadiremos en breve.",genders:["Mujer","Hombre","Pareja","Trans","Otro"],roles:["Hotwife","Cuckold","Bull","Swinger","Soltero/a","Espectador"],intents:["Chatear","Amistad","Quedar","Solo mirar"]},
+  it:{title:"🔒 Verifica iscrizione",sub:"Un rapido controllo prima di entrare nel gruppo.",age:"Ho più di 18 anni e accetto di entrare in una community per adulti.",rules:"Accetto di seguire le regole del gruppo e di non fare spam/pubblicità.",cap:"Non sono un robot — tocca questo simbolo:",next:"Continua",o_title:"👤 Poche domande veloci",o_sub:"Facoltativo — per match e suggerimenti. Puoi saltare.",gender:"Profilo",role:"Interesse / Ruolo",intent:"Obiettivo",city:"Città",cityph:"es. Roma",submit:"Completa ed entra",skip:"Salta le domande, entra e basta",done:"Verificato!",done_sub:"La tua richiesta è in approvazione, sarai aggiunto a breve.",genders:["Donna","Uomo","Coppia","Trans","Altro"],roles:["Hotwife","Cuckold","Bull","Swinger","Single","Spettatore"],intents:["Chiacchierare","Amicizia","Incontro","Solo guardare"]},
+  pt:{title:"🔒 Verificação de associação",sub:"Uma verificação rápida antes de entrar no grupo.",age:"Tenho mais de 18 anos e aceito entrar numa comunidade adulta.",rules:"Concordo em seguir as regras do grupo e não fazer spam/publicidade.",cap:"Não sou um robô — toque neste símbolo:",next:"Continuar",o_title:"👤 Algumas perguntas rápidas",o_sub:"Opcional — para combinações e sugestões. Pode pular.",gender:"Perfil",role:"Interesse / Papel",intent:"Objetivo",city:"Cidade",cityph:"ex. Lisboa",submit:"Concluir e entrar",skip:"Pular perguntas, apenas entrar",done:"Verificado!",done_sub:"Seu pedido está sendo aprovado, você será adicionado em breve.",genders:["Mulher","Homem","Casal","Trans","Outro"],roles:["Hotwife","Cuckold","Bull","Swinger","Solteiro","Espectador"],intents:["Conversar","Amizade","Encontrar","Só assistir"]},
+  ru:{title:"🔒 Проверка участника",sub:"Быстрая проверка перед вступлением в группу.",age:"Мне больше 18, и я согласен(на) вступить во взрослое сообщество.",rules:"Я согласен(на) соблюдать правила группы и не спамить/рекламировать.",cap:"Я не робот — нажми на этот символ:",next:"Далее",o_title:"👤 Несколько быстрых вопросов",o_sub:"Необязательно — для подбора и рекомендаций. Можно пропустить.",gender:"Профиль",role:"Интерес / Роль",intent:"Цель",city:"Город",cityph:"напр. Москва",submit:"Завершить и вступить",skip:"Пропустить вопросы, просто вступить",done:"Проверено!",done_sub:"Ваш запрос одобряется, скоро вас добавят.",genders:["Женщина","Мужчина","Пара","Транс","Другое"],roles:["Hotwife","Cuckold","Bull","Свингер","Один/одна","Наблюдатель"],intents:["Общение","Дружба","Встреча","Просто смотреть"]},
+  uk:{title:"🔒 Перевірка учасника",sub:"Швидка перевірка перед вступом до групи.",age:"Мені більше 18, і я погоджуюсь приєднатися до спільноти для дорослих.",rules:"Я погоджуюсь дотримуватися правил групи й не спамити/рекламувати.",cap:"Я не робот — натисни на цей символ:",next:"Далі",o_title:"👤 Кілька швидких запитань",o_sub:"Необов'язково — для підбору та порад. Можна пропустити.",gender:"Профіль",role:"Інтерес / Роль",intent:"Мета",city:"Місто",cityph:"напр. Київ",submit:"Завершити та приєднатися",skip:"Пропустити питання, просто приєднатися",done:"Перевірено!",done_sub:"Ваш запит схвалюється, скоро вас додадуть.",genders:["Жінка","Чоловік","Пара","Транс","Інше"],roles:["Hotwife","Cuckold","Bull","Свінгер","Один/одна","Спостерігач"],intents:["Спілкування","Дружба","Зустріч","Просто дивитися"]},
+  ar:{title:"🔒 التحقق من العضوية",sub:"تحقق سريع قبل الانضمام إلى المجموعة.",age:"عمري فوق 18 وأوافق على الانضمام إلى مجتمع للبالغين.",rules:"أوافق على اتباع قواعد المجموعة وعدم الإزعاج/الإعلان.",cap:"لست روبوتًا — المس هذا الرمز:",next:"متابعة",o_title:"👤 بعض الأسئلة السريعة",o_sub:"اختياري — للمطابقة والاقتراحات. يمكنك التخطي.",gender:"الملف",role:"الاهتمام / الدور",intent:"الهدف",city:"المدينة",cityph:"مثال: دبي",submit:"إنهاء والانضمام",skip:"تخطَّ الأسئلة وانضم فقط",done:"تم التحقق!",done_sub:"يتم قبول طلبك، ستتم إضافتك قريبًا.",genders:["امرأة","رجل","ثنائي","متحول","أخرى"],roles:["Hotwife","Cuckold","Bull","Swinger","أعزب","مشاهد"],intents:["دردشة","صداقة","لقاء","المشاهدة فقط"]},
+  fa:{title:"🔒 تأیید عضویت",sub:"یک بررسی سریع پیش از پیوستن به گروه.",age:"بالای ۱۸ سال هستم و می‌پذیرم به یک جامعهٔ بزرگسال بپیوندم.",rules:"می‌پذیرم قوانین گروه را رعایت کنم و اسپم/تبلیغ نکنم.",cap:"ربات نیستم — این نماد را لمس کن:",next:"ادامه",o_title:"👤 چند پرسش کوتاه",o_sub:"اختیاری — برای تطبیق و پیشنهادها. می‌توانی رد کنی.",gender:"پروفایل",role:"علاقه / نقش",intent:"هدف",city:"شهر",cityph:"مثلاً تهران",submit:"پایان و پیوستن",skip:"رد کردن پرسش‌ها، فقط بپیوند",done:"تأیید شد!",done_sub:"درخواستت در حال تأیید است، به‌زودی اضافه می‌شوی.",genders:["زن","مرد","زوج","ترنس","دیگر"],roles:["Hotwife","Cuckold","Bull","Swinger","مجرد","تماشاگر"],intents:["گفتگو","دوستی","ملاقات","فقط تماشا"]},
+  he:{title:"🔒 אימות חברות",sub:"בדיקה קצרה לפני ההצטרפות לקבוצה.",age:"אני מעל גיל 18 ומסכים/ה להצטרף לקהילת מבוגרים.",rules:"אני מסכים/ה לפעול לפי כללי הקבוצה ולא לשלוח ספאם/פרסום.",cap:"אני לא רובוט — הקש/י על הסמל הזה:",next:"המשך",o_title:"👤 כמה שאלות קצרות",o_sub:"רשות — להתאמות והמלצות. אפשר לדלג.",gender:"פרופיל",role:"עניין / תפקיד",intent:"מטרה",city:"עיר",cityph:"למשל תל אביב",submit:"סיום והצטרפות",skip:"דלג/י על השאלות, פשוט הצטרף/י",done:"אומת!",done_sub:"הבקשה שלך מאושרת, תתווסף/י בקרוב.",genders:["אישה","גבר","זוג","טרנס","אחר"],roles:["Hotwife","Cuckold","Bull","Swinger","רווק/ה","צופה"],intents:["צ'אט","חברות","להיפגש","רק לצפות"]},
+  az:{title:"🔒 Üzvlük Doğrulaması",sub:"Qrupa qoşulmadan əvvəl qısa yoxlama.",age:"18 yaşdan böyüyəm və yetkin bir icmaya qoşulduğumu qəbul edirəm.",rules:"Qrup qaydalarına əməl edəcəyimi, spam/reklam etməyəcəyimi qəbul edirəm.",cap:"Mən robot deyiləm — bu simvola toxun:",next:"Davam",o_title:"👤 Bir neçə qısa sual",o_sub:"İstəyə bağlı — uyğunlaşma və təkliflər üçün. Keçə bilərsən.",gender:"Profil",role:"Maraq / Rol",intent:"Məqsəd",city:"Şəhər",cityph:"məs. Bakı",submit:"Tamamla və qoşul",skip:"Sualları keç, sadəcə qoşul",done:"Doğrulandı!",done_sub:"Sorğun təsdiqlənir, tezliklə əlavə olunacaqsan.",genders:["Qadın","Kişi","Cüt","Trans","Digər"],roles:["Hotwife","Cuckold","Bull","Swinger","Tək","İzləyici"],intents:["Söhbət","Dostluq","Görüş","Sadəcə izləmək"]},
+  bg:{title:"🔒 Проверка на членство",sub:"Бърза проверка преди да се присъединиш към групата.",age:"Над 18 съм и приемам да се присъединя към общност за възрастни.",rules:"Съгласен/на съм да спазвам правилата на групата и да не спамя/рекламирам.",cap:"Не съм робот — докосни този символ:",next:"Продължи",o_title:"👤 Няколко бързи въпроса",o_sub:"По избор — за съвпадения и предложения. Можеш да пропуснеш.",gender:"Профил",role:"Интерес / Роля",intent:"Цел",city:"Град",cityph:"напр. София",submit:"Завърши и се присъедини",skip:"Пропусни въпросите, просто се присъедини",done:"Потвърдено!",done_sub:"Заявката ти се одобрява, скоро ще бъдеш добавен.",genders:["Жена","Мъж","Двойка","Транс","Друго"],roles:["Hotwife","Cuckold","Bull","Суингър","Сам/а","Наблюдател"],intents:["Чат","Приятелство","Среща","Само гледане"]},
+  ca:{title:"🔒 Verificació de membres",sub:"Una comprovació ràpida abans d'unir-te al grup.",age:"Soc major de 18 anys i accepto unir-me a una comunitat per a adults.",rules:"Accepto seguir les normes del grup i no fer spam/publicitat.",cap:"No soc un robot — toca aquest símbol:",next:"Continua",o_title:"👤 Unes preguntes ràpides",o_sub:"Opcional — per a coincidències i suggeriments. Pots ometre-ho.",gender:"Perfil",role:"Interès / Rol",intent:"Objectiu",city:"Ciutat",cityph:"p. ex. Barcelona",submit:"Finalitza i uneix-te",skip:"Omet les preguntes, només uneix-te",done:"Verificat!",done_sub:"La teva sol·licitud s'està aprovant, t'afegirem aviat.",genders:["Dona","Home","Parella","Trans","Altre"],roles:["Hotwife","Cuckold","Bull","Swinger","Solter/a","Espectador"],intents:["Xerrar","Amistat","Quedar","Només mirar"]},
+  cs:{title:"🔒 Ověření členství",sub:"Rychlá kontrola před vstupem do skupiny.",age:"Je mi přes 18 a souhlasím se vstupem do komunity pro dospělé.",rules:"Souhlasím s dodržováním pravidel skupiny a nebudu spamovat/inzerovat.",cap:"Nejsem robot — klepni na tento symbol:",next:"Pokračovat",o_title:"👤 Pár rychlých otázek",o_sub:"Volitelné — pro párování a tipy. Můžeš přeskočit.",gender:"Profil",role:"Zájem / Role",intent:"Cíl",city:"Město",cityph:"např. Praha",submit:"Dokončit a vstoupit",skip:"Přeskočit otázky, jen vstoupit",done:"Ověřeno!",done_sub:"Tvá žádost se schvaluje, brzy budeš přidán.",genders:["Žena","Muž","Pár","Trans","Jiné"],roles:["Hotwife","Cuckold","Bull","Swinger","Single","Divák"],intents:["Povídat si","Přátelství","Sejít se","Jen sledovat"]},
+  da:{title:"🔒 Medlemsverificering",sub:"Et hurtigt tjek før du tilslutter dig gruppen.",age:"Jeg er over 18 og accepterer at deltage i et voksenfællesskab.",rules:"Jeg accepterer at følge gruppens regler og ikke spamme/reklamere.",cap:"Jeg er ikke en robot — tryk på dette symbol:",next:"Fortsæt",o_title:"👤 Et par hurtige spørgsmål",o_sub:"Valgfrit — til matching og forslag. Du kan springe over.",gender:"Profil",role:"Interesse / Rolle",intent:"Mål",city:"By",cityph:"f.eks. København",submit:"Afslut og deltag",skip:"Spring spørgsmål over, deltag bare",done:"Verificeret!",done_sub:"Din anmodning godkendes, du tilføjes snart.",genders:["Kvinde","Mand","Par","Trans","Andet"],roles:["Hotwife","Cuckold","Bull","Swinger","Single","Tilskuer"],intents:["Chatte","Venskab","Mødes","Bare kigge"]},
+  el:{title:"🔒 Επαλήθευση μέλους",sub:"Ένας γρήγορος έλεγχος πριν μπεις στην ομάδα.",age:"Είμαι άνω των 18 και αποδέχομαι να μπω σε κοινότητα ενηλίκων.",rules:"Αποδέχομαι να τηρώ τους κανόνες της ομάδας και να μην κάνω spam/διαφήμιση.",cap:"Δεν είμαι ρομπότ — άγγιξε αυτό το σύμβολο:",next:"Συνέχεια",o_title:"👤 Μερικές γρήγορες ερωτήσεις",o_sub:"Προαιρετικό — για ταίριασμα και προτάσεις. Μπορείς να παραλείψεις.",gender:"Προφίλ",role:"Ενδιαφέρον / Ρόλος",intent:"Στόχος",city:"Πόλη",cityph:"π.χ. Αθήνα",submit:"Ολοκλήρωση και είσοδος",skip:"Παράλειψη ερωτήσεων, απλώς μπες",done:"Επαληθεύτηκε!",done_sub:"Το αίτημά σου εγκρίνεται, θα προστεθείς σύντομα.",genders:["Γυναίκα","Άντρας","Ζευγάρι","Τρανς","Άλλο"],roles:["Hotwife","Cuckold","Bull","Swinger","Ελεύθερος/η","Θεατής"],intents:["Κουβέντα","Φιλία","Συνάντηση","Απλώς παρακολούθηση"]},
+  hr:{title:"🔒 Provjera članstva",sub:"Brza provjera prije ulaska u grupu.",age:"Imam više od 18 i pristajem pridružiti se zajednici za odrasle.",rules:"Pristajem poštovati pravila grupe i ne slati spam/reklame.",cap:"Nisam robot — dodirni ovaj simbol:",next:"Nastavi",o_title:"👤 Nekoliko kratkih pitanja",o_sub:"Neobavezno — za uparivanje i prijedloge. Možeš preskočiti.",gender:"Profil",role:"Interes / Uloga",intent:"Cilj",city:"Grad",cityph:"npr. Zagreb",submit:"Završi i pridruži se",skip:"Preskoči pitanja, samo se pridruži",done:"Provjereno!",done_sub:"Tvoj zahtjev se odobrava, uskoro ćeš biti dodan.",genders:["Žena","Muškarac","Par","Trans","Ostalo"],roles:["Hotwife","Cuckold","Bull","Swinger","Samac","Promatrač"],intents:["Razgovor","Prijateljstvo","Susret","Samo gledanje"]},
+  id:{title:"🔒 Verifikasi Keanggotaan",sub:"Pemeriksaan singkat sebelum bergabung ke grup.",age:"Saya berusia di atas 18 dan setuju bergabung ke komunitas dewasa.",rules:"Saya setuju mematuhi aturan grup dan tidak spam/iklan.",cap:"Saya bukan robot — ketuk simbol ini:",next:"Lanjut",o_title:"👤 Beberapa pertanyaan singkat",o_sub:"Opsional — untuk pencocokan dan saran. Bisa dilewati.",gender:"Profil",role:"Minat / Peran",intent:"Tujuan",city:"Kota",cityph:"mis. Jakarta",submit:"Selesai & gabung",skip:"Lewati pertanyaan, langsung gabung",done:"Terverifikasi!",done_sub:"Permintaanmu sedang disetujui, kamu akan segera ditambahkan.",genders:["Wanita","Pria","Pasangan","Trans","Lainnya"],roles:["Hotwife","Cuckold","Bull","Swinger","Lajang","Penonton"],intents:["Mengobrol","Pertemanan","Bertemu","Hanya menonton"]},
+  ja:{title:"🔒 メンバー認証",sub:"グループ参加前の簡単な確認です。",age:"私は18歳以上で、アダルトコミュニティへの参加に同意します。",rules:"グループのルールに従い、スパム・宣伝をしないことに同意します。",cap:"私はロボットではありません — この記号をタップ:",next:"続ける",o_title:"👤 簡単な質問",o_sub:"任意 — マッチングや提案のため。スキップできます。",gender:"プロフィール",role:"興味 / 役割",intent:"目的",city:"都市",cityph:"例: 東京",submit:"完了して参加",skip:"質問をスキップして参加",done:"認証されました！",done_sub:"リクエストを承認中です。まもなく追加されます。",genders:["女性","男性","カップル","トランス","その他"],roles:["Hotwife","Cuckold","Bull","Swinger","シングル","観るだけ"],intents:["チャット","友達","会う","見るだけ"]},
+  nl:{title:"🔒 Lidmaatschapsverificatie",sub:"Een snelle controle voordat je lid wordt van de groep.",age:"Ik ben ouder dan 18 en ga akkoord met deelname aan een community voor volwassenen.",rules:"Ik ga akkoord met de groepsregels en zal niet spammen/adverteren.",cap:"Ik ben geen robot — tik op dit symbool:",next:"Doorgaan",o_title:"👤 Een paar korte vragen",o_sub:"Optioneel — voor matching en suggesties. Je kunt overslaan.",gender:"Profiel",role:"Interesse / Rol",intent:"Doel",city:"Stad",cityph:"bijv. Amsterdam",submit:"Voltooien en lid worden",skip:"Vragen overslaan, gewoon lid worden",done:"Geverifieerd!",done_sub:"Je verzoek wordt goedgekeurd, je wordt zo toegevoegd.",genders:["Vrouw","Man","Stel","Trans","Anders"],roles:["Hotwife","Cuckold","Bull","Swinger","Single","Kijker"],intents:["Chatten","Vriendschap","Afspreken","Alleen kijken"]},
+  pl:{title:"🔒 Weryfikacja członkostwa",sub:"Szybka weryfikacja przed dołączeniem do grupy.",age:"Mam ukończone 18 lat i zgadzam się dołączyć do społeczności dla dorosłych.",rules:"Zgadzam się przestrzegać zasad grupy i nie spamować/reklamować.",cap:"Nie jestem robotem — dotknij tego symbolu:",next:"Dalej",o_title:"👤 Kilka szybkich pytań",o_sub:"Opcjonalnie — do dopasowań i sugestii. Możesz pominąć.",gender:"Profil",role:"Zainteresowanie / Rola",intent:"Cel",city:"Miasto",cityph:"np. Warszawa",submit:"Zakończ i dołącz",skip:"Pomiń pytania, po prostu dołącz",done:"Zweryfikowano!",done_sub:"Twoja prośba jest zatwierdzana, wkrótce zostaniesz dodany.",genders:["Kobieta","Mężczyzna","Para","Trans","Inne"],roles:["Hotwife","Cuckold","Bull","Swinger","Singiel","Obserwator"],intents:["Rozmowa","Przyjaźń","Spotkanie","Tylko oglądanie"]},
+  ro:{title:"🔒 Verificarea membrilor",sub:"O verificare rapidă înainte de a intra în grup.",age:"Am peste 18 ani și accept să mă alătur unei comunități pentru adulți.",rules:"Sunt de acord să respect regulile grupului și să nu fac spam/reclamă.",cap:"Nu sunt robot — atinge acest simbol:",next:"Continuă",o_title:"👤 Câteva întrebări rapide",o_sub:"Opțional — pentru potriviri și sugestii. Poți sări peste.",gender:"Profil",role:"Interes / Rol",intent:"Scop",city:"Oraș",cityph:"ex. București",submit:"Finalizează și intră",skip:"Sari peste întrebări, doar intră",done:"Verificat!",done_sub:"Cererea ta se aprobă, vei fi adăugat în curând.",genders:["Femeie","Bărbat","Cuplu","Trans","Altul"],roles:["Hotwife","Cuckold","Bull","Swinger","Singur","Spectator"],intents:["Discuții","Prietenie","Întâlnire","Doar privesc"]},
+  sr:{title:"🔒 Provera članstva",sub:"Brza provera pre nego što se pridružiš grupi.",age:"Imam preko 18 i prihvatam da se pridružim zajednici za odrasle.",rules:"Prihvatam da poštujem pravila grupe i da ne šaljem spam/reklame.",cap:"Nisam robot — dodirni ovaj simbol:",next:"Nastavi",o_title:"👤 Nekoliko kratkih pitanja",o_sub:"Opciono — za uparivanje i predloge. Možeš preskočiti.",gender:"Profil",role:"Interesovanje / Uloga",intent:"Cilj",city:"Grad",cityph:"npr. Beograd",submit:"Završi i pridruži se",skip:"Preskoči pitanja, samo se pridruži",done:"Provereno!",done_sub:"Tvoj zahtev se odobrava, uskoro ćeš biti dodat.",genders:["Žena","Muškarac","Par","Trans","Ostalo"],roles:["Hotwife","Cuckold","Bull","Swinger","Sam","Posmatrač"],intents:["Ćaskanje","Prijateljstvo","Susret","Samo gledanje"]},
+  zh:{title:"🔒 会员验证",sub:"加入群组前的快速验证。",age:"我已年满18岁，并同意加入成人社区。",rules:"我同意遵守群组规则，不发垃圾信息/广告。",cap:"我不是机器人——点击这个符号：",next:"继续",o_title:"👤 几个简短问题",o_sub:"可选——用于匹配和推荐。可以跳过。",gender:"资料",role:"兴趣 / 角色",intent:"目的",city:"城市",cityph:"例如 北京",submit:"完成并加入",skip:"跳过问题，直接加入",done:"已验证！",done_sub:"你的请求正在批准，马上会被添加。",genders:["女","男","情侣","跨性别","其他"],roles:["Hotwife","Cuckold","Bull","Swinger","单身","旁观者"],intents:["聊天","交友","见面","只是观看"]}
 };
-const T = I18N[LANG] || I18N.tr;
 
-// apply texts
-const set=(id,html)=>{const e=document.getElementById(id); if(e) e.innerHTML=html;};
+const RTL = ["ar","fa","he"];
+let LANG = (tg?.initDataUnsafe?.user?.language_code || navigator.language || "en").slice(0,2).toLowerCase();
+if(!I18N[LANG]) LANG = "en";
+const T = I18N[LANG];
+if(RTL.includes(LANG)){ document.documentElement.setAttribute("dir","rtl"); }
+document.documentElement.setAttribute("lang",LANG);
+
+const set=(id,txt)=>{const e=document.getElementById(id); if(e) e.textContent=txt;};
 set("t_title",T.title); set("t_sub",T.sub); set("t_age",T.age); set("t_rules",T.rules);
 set("t_cap",T.cap); set("next",T.next);
 set("t_o_title",T.o_title); set("t_o_sub",T.o_sub); set("t_gender",T.gender);
@@ -149,53 +118,43 @@ set("t_role",T.role); set("t_intent",T.intent); set("t_city",T.city);
 set("submit",T.submit); set("skip",T.skip); set("t_done",T.done); set("t_done_sub",T.done_sub);
 document.getElementById("city").placeholder = T.cityph;
 
-// ---- captcha ----
+// captcha
 const POOL=["🍎","⭐","🚗","🐶","🌸","⚽","🔑","🎈","🍕","🌙"];
 let target;
 function buildCaptcha(){
-  const shuffled=[...POOL].sort(()=>Math.random()-0.5).slice(0,5);
-  target=shuffled[Math.floor(Math.random()*shuffled.length)];
+  const sh=[...POOL].sort(()=>Math.random()-0.5).slice(0,5);
+  target=sh[Math.floor(Math.random()*sh.length)];
   document.getElementById("cap_target").textContent=target;
   const box=document.getElementById("emojis"); box.innerHTML="";
-  shuffled.forEach(em=>{
+  sh.forEach(em=>{
     const d=document.createElement("div"); d.className="emoji"; d.textContent=em;
     d.onclick=()=>{
-      if(em===target){ document.querySelectorAll(".emoji").forEach(x=>x.classList.remove("sel","bad"));
-        d.classList.add("sel"); window._cap=true; refresh(); }
-      else{ d.classList.add("bad"); window._cap=false; setTimeout(()=>d.classList.remove("bad"),300);
-        setTimeout(buildCaptcha,350); refresh(); }
+      if(em===target){ document.querySelectorAll(".emoji").forEach(x=>x.classList.remove("sel","bad")); d.classList.add("sel"); window._cap=true; refresh(); }
+      else{ d.classList.add("bad"); window._cap=false; setTimeout(()=>d.classList.remove("bad"),300); setTimeout(buildCaptcha,350); refresh(); }
     };
     box.appendChild(d);
   });
 }
 buildCaptcha();
 
-// ---- gate validation ----
 const age=document.getElementById("age"), rules=document.getElementById("rules"), next=document.getElementById("next");
 function refresh(){ next.disabled = !(age.checked && rules.checked && window._cap===true); }
 age.onchange=refresh; rules.onchange=refresh;
+next.onclick=()=>{ document.getElementById("step1").classList.add("hidden"); document.getElementById("step2").classList.remove("hidden"); buildChips(); };
 
-next.onclick=()=>{ document.getElementById("step1").classList.add("hidden");
-  document.getElementById("step2").classList.remove("hidden"); buildChips(); };
-
-// ---- onboarding chips ----
 const answers={gender:null,role:null,intent:null};
-function chipGroup(containerId,items,key){
-  const c=document.getElementById(containerId); c.innerHTML="";
-  items.forEach(it=>{ const d=document.createElement("div"); d.className="chip"; d.textContent=it;
-    d.onclick=()=>{ [...c.children].forEach(x=>x.classList.remove("sel"));
-      d.classList.add("sel"); answers[key]=it; };
+function chipGroup(cid,items,key){
+  const c=document.getElementById(cid); c.innerHTML="";
+  items.forEach((it,i)=>{ const d=document.createElement("div"); d.className="chip"; d.textContent=it;
+    d.onclick=()=>{ [...c.children].forEach(x=>x.classList.remove("sel")); d.classList.add("sel"); answers[key]=i; };
     c.appendChild(d); });
 }
-function buildChips(){ chipGroup("g_gender",T.genders,"gender");
-  chipGroup("g_role",T.roles,"role"); chipGroup("g_intent",T.intents,"intent"); }
+function buildChips(){ chipGroup("g_gender",T.genders,"gender"); chipGroup("g_role",T.roles,"role"); chipGroup("g_intent",T.intents,"intent"); }
 
-// ---- submit ----
 function finish(skip){
-  const payload={ v:1, ok:true, age_ok:true, rules_ok:true, captcha:true,
-    lang:LANG, gender:skip?null:answers.gender, role:skip?null:answers.role,
-    intent:skip?null:answers.intent, city:skip?null:(document.getElementById("city").value.trim()||null),
-    ts:Date.now() };
+  const payload={ v:1, ok:true, age_ok:true, rules_ok:true, captcha:true, lang:LANG,
+    gender: skip?null:answers.gender, role: skip?null:answers.role, intent: skip?null:answers.intent,
+    city: skip?null:(document.getElementById("city").value.trim()||null), ts:Date.now() };
   document.getElementById("step2").classList.add("hidden");
   document.getElementById("done").classList.remove("hidden");
   try{ tg.sendData(JSON.stringify(payload)); }catch(e){}
