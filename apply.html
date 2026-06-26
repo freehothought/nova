@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="robots" content="noindex,nofollow">
+<title>Nova · Özel Kulüp Başvuru</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root{--bg:#17212b;--fg:#fff;--hint:#8a98a5;--card:#1e2a36;--accent:#3390ec;--ok:#4dcb6d;--line:#2a3744;--gold:#e6b450}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:480px;margin:0 auto;padding:18px 16px 40px;min-height:100vh}
+  h1{font-size:20px;margin:6px 0 2px;text-align:center}
+  .sub{color:var(--hint);font-size:13px;text-align:center;margin-bottom:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+  .label{font-size:15px;font-weight:600;margin-bottom:4px}
+  .hint{color:var(--hint);font-size:12px;margin:2px 0 10px}
+  .check{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:14px;line-height:1.4}
+  .check input{margin-top:2px;width:18px;height:18px;accent-color:var(--accent);flex:0 0 auto}
+  .grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+  .chip{padding:9px 13px;border-radius:20px;background:#26333f;border:1px solid var(--line);font-size:13px;cursor:pointer;transition:.12s}
+  .chip.sel{background:var(--accent);border-color:var(--accent);color:#fff}
+  .grp-title{font-size:13px;font-weight:600;color:var(--gold);margin:14px 0 2px}
+  input[type=text],select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#26333f;color:var(--fg);font-size:14px;margin-top:6px}
+  select{appearance:none;-webkit-appearance:none}
+  input[type=text]::placeholder{color:var(--hint)}
+  .btn{width:100%;padding:14px;border:0;border-radius:12px;background:var(--accent);color:#fff;font-size:16px;font-weight:600;cursor:pointer;margin-top:16px;transition:.15s}
+  .btn:disabled{background:#33414e;color:#73818e;cursor:not-allowed}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--hint);margin-top:8px;font-weight:500}
+  .skip{display:block;text-align:center;color:var(--hint);font-size:13px;margin-top:12px;cursor:pointer;text-decoration:underline}
+  .hidden{display:none}
+  .topbar{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .back{font-size:20px;color:var(--hint);cursor:pointer;flex:0 0 auto;width:24px}
+  .progress{flex:1;height:6px;background:#26333f;border-radius:6px;overflow:hidden}
+  .pbar{height:100%;background:var(--accent);width:0;transition:width .3s}
+  .slide{animation:slidein .26s ease}
+  @keyframes slidein{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
+  .strength{margin:6px 0 0}
+  .sbar-wrap{height:8px;background:#26333f;border-radius:8px;overflow:hidden;margin-top:6px}
+  .sbar{height:100%;background:linear-gradient(90deg,#3390ec,#4dcb6d);width:0;transition:width .4s}
+  .ok-screen{text-align:center;padding-top:50px}
+  .ok-screen .big{font-size:60px}
+  .ages{display:flex;gap:10px}.ages>div{flex:1}
+  html[dir=rtl] .topbar{flex-direction:row-reverse}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <span class="back hidden" id="back">‹</span>
+    <div class="progress"><div class="pbar" id="pbar"></div></div>
+  </div>
+  <h1 id="t_title"></h1>
+  <div class="sub" id="t_sub"></div>
+
+  <!-- Consent gate -->
+  <div id="s_consent">
+    <div class="card"><label class="check"><input type="checkbox" id="c_age"><span id="t_cage"></span></label></div>
+    <div class="card"><label class="check"><input type="checkbox" id="c_rules"><span id="t_crules"></span></label></div>
+    <div class="card"><label class="check"><input type="checkbox" id="c_inact"><span id="t_cinact"></span></label></div>
+    <button class="btn" id="consentNext" disabled></button>
+  </div>
+
+  <!-- Dynamic slide host -->
+  <div id="s_form" class="hidden">
+    <div class="card">
+      <div class="label" id="f_label"></div>
+      <div class="hint" id="f_hint"></div>
+      <div id="f_body"></div>
+    </div>
+    <button class="btn" id="formNext"></button>
+    <span class="skip" id="formSkip"></span>
+    <div class="strength" id="strengthWrap">
+      <div class="hint" id="t_strength"></div>
+      <div class="sbar-wrap"><div class="sbar" id="sbar"></div></div>
+    </div>
+  </div>
+
+  <!-- Done -->
+  <div id="s_done" class="ok-screen hidden">
+    <div class="big">📨</div>
+    <h1 id="t_done"></h1>
+    <div class="sub" id="t_done_sub"></div>
+    <button class="btn" id="closeBtn"></button>
+  </div>
+</div>
+
+<script>
+const tg = window.Telegram?.WebApp;
+try{ tg?.ready(); tg?.expand(); }catch(e){}
+
+/* ---- Chrome strings (tr+en now; remaining 44 langs filled by build script) ---- */
+const APP_I18N = {
+  tr:{title:"💎 Özel Kulüp Başvurusu",sub:"Profilini doldur, owner incelemesine gönderelim.",
+    cage:"18 yaşından büyüğüm ve yetişkin bir kulübe başvurduğumu kabul ediyorum.",
+    crules:"Kulüp kurallarına uyacağımı kabul ediyorum.",
+    cinact:"Uzun süre aktif olmazsam üyeliğimin kaldırılabileceğini kabul ediyorum.",
+    cont:"Devam",skip:"Bu adımı atla",finish:"Başvuruyu Tamamla",
+    strength:"Profil gücü",multi:"Birden fazla seçebilirsin.",
+    role:"Profilin",age:"Yaş",p1:"1. kişi yaşı",p2:"2. kişi yaşı",ageph:"örn. 30",
+    country:"🌍 Ülke",city:"🏙️ Şehir",
+    seeking:"🎯 Arayış",orientation:"🌈 Yönelim",marital:"💍 Medeni durum",
+    zodiac:"♈ Burç",communication:"💬 İletişim tarzı",boundaries:"🧩 Kulüp kodların",
+    privacy:"🕶️ Mahremiyet",travel:"🚗 Seyahat",children:"👶 Çocuk",
+    body:"📐 Fiziksel",social:"🔗 Sosyal (opsiyonel)",
+    g_dynamic:"🔥 Dinamik kodlar",g_style:"💬 Tanışma tarzı",g_meetup:"📍 Buluşma",
+    fheight:"Kadın boy (cm)",fweight:"Kadın kilo (kg)",mheight:"Erkek boy (cm)",mweight:"Erkek kilo (kg)",penis:"Özel ölçü (cm)",
+    x_user:"𝕏 kullanıcı adı",ig_user:"📸 Instagram kullanıcı adı",social_hint:"İstersen ekle, zorunlu değil.",
+    done:"Başvuru gönderildi! 🎉",done_sub:"Son adım için sohbete dön: fotoğraf ve sesini gönder. Daha fazla görsel kabul şansını artırır 🔥",
+    close:"Sohbete dön",none:"— Seçilmedi —"},
+  en:{title:"💎 Private Club Application",sub:"Fill in your profile and we'll send it for review.",
+    cage:"I am over 18 and accept applying to an adult club.",
+    crules:"I agree to follow the club rules.",
+    cinact:"I accept my membership may be removed if I stay inactive for a long time.",
+    cont:"Continue",skip:"Skip this step",finish:"Finish Application",
+    strength:"Profile strength",multi:"You can pick more than one.",
+    role:"Your profile",age:"Age",p1:"Person 1 age",p2:"Person 2 age",ageph:"e.g. 30",
+    country:"🌍 Country",city:"🏙️ City",
+    seeking:"🎯 Looking for",orientation:"🌈 Orientation",marital:"💍 Marital status",
+    zodiac:"♈ Zodiac",communication:"💬 Communication",boundaries:"🧩 Your club codes",
+    privacy:"🕶️ Privacy",travel:"🚗 Travel",children:"👶 Children",
+    body:"📐 Physical",social:"🔗 Social (optional)",
+    g_dynamic:"🔥 Dynamic codes",g_style:"💬 Intro style",g_meetup:"📍 Meetup",
+    fheight:"Female height (cm)",fweight:"Female weight (kg)",mheight:"Male height (cm)",mweight:"Male weight (kg)",penis:"Private measure (cm)",
+    x_user:"𝕏 username",ig_user:"📸 Instagram username",social_hint:"Add if you like, not required.",
+    done:"Application sent! 🎉",done_sub:"Back to the chat for the last step: send your photos and voice. More photos boost your acceptance 🔥",
+    close:"Back to chat",none:"— Not selected —"},
+};
+const COUNTRY_LABELS={tr:"🇹🇷 Türkiye",en:"🇺🇸 USA / UK",de:"🇩🇪 Deutschland",az:"🇦🇿 Azərbaycan",ru:"🇷🇺 Russia",ua:"🇺🇦 Ukraine",fr:"🇫🇷 France",es:"🇪🇸 España",it:"🇮🇹 Italia",pt:"🇵🇹 Portugal",nl:"🇳🇱 Nederland",pl:"🇵🇱 Polska",el:"🇬🇷 Greece",bg:"🇧🇬 Bulgaria",ro:"🇷🇴 România",ca:"🇪🇸 Català",cs:"🇨🇿 Czechia",sr:"🇷🇸 Serbia",da:"🇩🇰 Danmark",ar:"🇦🇪 Arab World",fa:"🇮🇷 Iran",he:"🇮🇱 Israel",hr:"🇭🇷 Hrvatska",id:"🇮🇩 Indonesia",ja:"🇯🇵 Japan",zh:"🇨🇳 China"};
+const LANG2COUNTRY={uk:"ua"};
+const RTL=["ar","fa","he","ur","ps"];
+
+let LANG=(tg?.initDataUnsafe?.user?.language_code||navigator.language||"en").slice(0,2).toLowerCase();
+if(!APP_I18N[LANG]) LANG="en";
+const T=APP_I18N[LANG];
+if(RTL.includes(LANG)) document.documentElement.setAttribute("dir","rtl");
+document.documentElement.setAttribute("lang",LANG);
+
+const $=id=>document.getElementById(id);
+const set=(id,txt)=>{const e=$(id); if(e) e.textContent=txt;};
+set("t_title",T.title); set("t_sub",T.sub);
+set("t_cage",T.cage); set("t_crules",T.crules); set("t_cinact",T.cinact);
+set("consentNext",T.cont); set("t_strength",T.strength);
+
+/* ---- Catalog + cities load ---- */
+let CAT=null, CITYDATA={};
+const lab=o=>(o.labels&&(o.labels[LANG]||o.labels.en))||o.code;
+
+/* ---- State ---- */
+const ST={ role:null, age:null, age_female:null, age_male:null, country:null, city:null,
+  seeking:[], orientation:[], marital:null, zodiac:null, communication:null,
+  boundaries:[], privacy:null, travel:null, children:null,
+  female_height_cm:null, female_weight_kg:null, male_height_cm:null, male_weight_kg:null, penis_size_cm:null,
+  x_username:null, instagram_username:null };
+
+/* ---- Slide plan (built after role known for body conditionality) ---- */
+let SLIDES=[], cur=0;
+function buildSlides(){
+  SLIDES=[
+    {id:"role"}, {id:"age"}, {id:"city"},
+    {id:"seeking"}, {id:"orientation"}, {id:"marital"}, {id:"zodiac"},
+    {id:"communication"}, {id:"boundaries"}, {id:"privacy"}, {id:"travel"},
+    {id:"children"}, {id:"body"}, {id:"social"},
+  ];
+}
+
+/* ---- Profile strength ---- */
+const STRENGTH_FIELDS=["seeking","orientation","marital","zodiac","communication","boundaries","privacy","travel","children","body","social"];
+function bodyFilled(){return [ST.female_height_cm,ST.female_weight_kg,ST.male_height_cm,ST.male_weight_kg,ST.penis_size_cm].some(v=>v!=null);}
+function socialFilled(){return !!(ST.x_username||ST.instagram_username);}
+function fieldFilled(id){
+  if(id==="body") return bodyFilled();
+  if(id==="social") return socialFilled();
+  const v=ST[id]; return Array.isArray(v)? v.length>0 : v!=null;
+}
+function strength(){
+  const core=4; // consents+role+age+city are mandatory baseline
+  let got=core;
+  STRENGTH_FIELDS.forEach(f=>{ if(fieldFilled(f)) got++; });
+  const total=core+STRENGTH_FIELDS.length;
+  return Math.round(got/total*100);
+}
+function refreshStrength(){ $("sbar").style.width=strength()+"%"; $("t_strength").textContent=T.strength+" "+strength()+"%"; }
+
+/* ---- Renderers ---- */
+function renderChips(host, options, selectedArr, multi){
+  host.innerHTML="";
+  options.forEach(o=>{
+    const d=document.createElement("div"); d.className="chip"; d.textContent=lab(o);
+    if(selectedArr.includes(o.code)) d.classList.add("sel");
+    d.onclick=()=>{
+      if(multi){
+        const i=selectedArr.indexOf(o.code);
+        if(i>=0){selectedArr.splice(i,1); d.classList.remove("sel");}
+        else{selectedArr.push(o.code); d.classList.add("sel");}
+      }else{
+        selectedArr.length=0; selectedArr.push(o.code);
+        [...host.children].forEach(x=>x.classList.remove("sel")); d.classList.add("sel");
+      }
+      refreshStrength();
+    };
+    host.appendChild(d);
+  });
+}
+function numberSelect(value,range,onpick){
+  const s=document.createElement("select");
+  const def=document.createElement("option"); def.value=""; def.textContent=T.none; s.appendChild(def);
+  for(let v=range[0];v<=range[1];v++){ const o=document.createElement("option"); o.value=v; o.textContent=v; if(v===value)o.selected=true; s.appendChild(o); }
+  s.onchange=()=>{ onpick(s.value?parseInt(s.value,10):null); refreshStrength(); };
+  return s;
+}
+
+function renderSlide(){
+  const slide=SLIDES[cur];
+  const id=slide.id;
+  const body=$("f_body"); body.innerHTML=""; $("f_hint").textContent="";
+  $("back").classList.toggle("hidden", cur===0);
+  $("pbar").style.width=((cur+1)/SLIDES.length*100)+"%";
+  $("formSkip").classList.add("hidden");
+  $("formNext").textContent=(cur===SLIDES.length-1)?T.finish:T.cont;
+
+  if(id==="role"){
+    $("f_label").textContent=T.role;
+    const tmp=[]; renderChips(body, CAT.fields.role.options, tmp, false);
+    body._sync=()=>{ ST.role=tmp[0]||null; };
+  } else if(id==="age"){
+    $("f_label").textContent=T.age;
+    const couple=ST.role==="couple";
+    const wrap=document.createElement("div"); wrap.className=couple?"ages":"";
+    const mk=(lblTxt,val)=>{ const d=document.createElement("div"); const l=document.createElement("div"); l.className="hint"; l.textContent=lblTxt;
+      const inp=document.createElement("input"); inp.type="text"; inp.inputMode="numeric"; inp.maxLength=2; inp.placeholder=T.ageph; if(val)inp.value=val; d.appendChild(l); d.appendChild(inp); return {d,inp}; };
+    if(couple){ const a=mk(T.p1,ST.age_female), b=mk(T.p2,ST.age_male); wrap.appendChild(a.d); wrap.appendChild(b.d);
+      body._sync=()=>{ ST.age_female=ageVal(a.inp.value); ST.age_male=ageVal(b.inp.value); ST.age=null; }; }
+    else { const a=mk(T.age,ST.age); wrap.appendChild(a.d);
+      body._sync=()=>{ ST.age=ageVal(a.inp.value); ST.age_female=null; ST.age_male=null; }; }
+    body.appendChild(wrap);
+  } else if(id==="city"){
+    $("f_label").textContent=T.city;
+    const cl=document.createElement("div"); cl.className="hint"; cl.textContent=T.country;
+    const cs=document.createElement("select"); const ci=document.createElement("select");
+    const codes=Object.keys(CITYDATA);
+    const ordered=Object.keys(COUNTRY_LABELS).filter(c=>codes.includes(c)).concat(codes.filter(c=>!(c in COUNTRY_LABELS)));
+    ordered.forEach(cc=>{const o=document.createElement("option"); o.value=cc; o.textContent=COUNTRY_LABELS[cc]||cc.toUpperCase(); cs.appendChild(o);});
+    let def=LANG2COUNTRY[LANG]||LANG; if(!CITYDATA[def]) def=CITYDATA["tr"]?"tr":(ordered[0]||"");
+    const fill=cc=>{ ci.innerHTML=""; const d=document.createElement("option"); d.value=""; d.textContent=T.city; ci.appendChild(d);
+      (CITYDATA[cc]||[]).forEach(n=>{const o=document.createElement("option"); o.value=n; o.textContent=n; if(n===ST.city)o.selected=true; ci.appendChild(o);}); };
+    cs.value=ST.country||def; fill(cs.value);
+    cs.onchange=()=>fill(cs.value);
+    body.appendChild(cl); body.appendChild(cs);
+    const cil=document.createElement("div"); cil.className="hint"; cil.textContent=T.city; cil.style.marginTop="10px"; body.appendChild(cil); body.appendChild(ci);
+    body._sync=()=>{ ST.country=cs.value||null; ST.city=ci.value||null; };
+  } else if(id==="boundaries"){
+    $("f_label").textContent=T.boundaries; $("f_hint").textContent=T.multi; $("formSkip").classList.remove("hidden");
+    const groups=CAT.fields.boundaries.groups;
+    [["dynamic",T.g_dynamic],["style",T.g_style],["meetup",T.g_meetup]].forEach(([gk,gt])=>{
+      const h=document.createElement("div"); h.className="grp-title"; h.textContent=gt; body.appendChild(h);
+      const g=document.createElement("div"); g.className="grid"; body.appendChild(g);
+      renderChips(g, groups[gk], ST.boundaries, true);
+    });
+    body._sync=()=>{};
+  } else if(id==="body"){
+    $("f_label").textContent=T.body; $("formSkip").classList.remove("hidden");
+    const role=ST.role; const r=CAT.fields;
+    const add=(lblTxt,key,range)=>{ const l=document.createElement("div"); l.className="hint"; l.textContent=lblTxt; l.style.marginTop="8px"; body.appendChild(l);
+      body.appendChild(numberSelect(ST[key],range,v=>ST[key]=v)); };
+    if(role==="woman"||role==="couple"){ add(T.fheight,"female_height_cm",r.height_cm.range); add(T.fweight,"female_weight_kg",r.weight_kg.range); }
+    if(role==="man"||role==="couple"){ add(T.mheight,"male_height_cm",r.height_cm.range); add(T.mweight,"male_weight_kg",r.weight_kg.range); add(T.penis,"penis_size_cm",r.penis_size_cm.range); }
+    body._sync=()=>{};
+  } else if(id==="social"){
+    $("f_label").textContent=T.social; $("f_hint").textContent=T.social_hint; $("formSkip").classList.remove("hidden");
+    const x=document.createElement("input"); x.type="text"; x.placeholder=T.x_user; if(ST.x_username)x.value=ST.x_username;
+    const ig=document.createElement("input"); ig.type="text"; ig.placeholder=T.ig_user; if(ST.instagram_username)ig.value=ST.instagram_username; ig.style.marginTop="8px";
+    body.appendChild(x); body.appendChild(ig);
+    body._sync=()=>{ ST.x_username=(x.value||"").trim().replace(/^@/,"")||null; ST.instagram_username=(ig.value||"").trim().replace(/^@/,"")||null; };
+  } else {
+    // single/multi select catalog fields
+    const f=CAT.fields[id]; const multi=f.widget==="multi";
+    $("f_label").textContent=T[id]||id; if(multi)$("f_hint").textContent=T.multi; $("formSkip").classList.remove("hidden");
+    const g=document.createElement("div"); g.className="grid"; body.appendChild(g);
+    if(multi){ renderChips(g, f.options, ST[id], true); body._sync=()=>{}; }
+    else{ const tmp=ST[id]?[ST[id]]:[]; renderChips(g, f.options, tmp, false); body._sync=()=>{ ST[id]=tmp[0]||null; }; }
+  }
+  refreshStrength();
+}
+
+function ageVal(s){ const v=parseInt((s||"").trim(),10); return (v>=18&&v<=99)?v:null; }
+
+function canAdvance(){
+  const id=SLIDES[cur].id;
+  if(id==="role") return !!ST.role;
+  if(id==="age"){ return ST.role==="couple" ? (ST.age_female&&ST.age_male) : !!ST.age; }
+  if(id==="city") return !!(ST.country&&ST.city);
+  return true; // optional slides
+}
+
+function go(delta){
+  const body=$("f_body"); if(body._sync) body._sync();
+  if(delta>0 && !canAdvance()) return; // core required
+  if(delta>0 && cur===SLIDES.length-1){ submit(); return; }
+  cur=Math.max(0,Math.min(SLIDES.length-1,cur+delta));
+  renderSlide();
+}
+$("formNext").onclick=()=>go(1);
+$("formSkip").onclick=()=>go(1);
+$("back").onclick=()=>go(-1);
+
+/* consent gate */
+function refreshConsent(){ $("consentNext").disabled=!($("c_age").checked&&$("c_rules").checked&&$("c_inact").checked); }
+["c_age","c_rules","c_inact"].forEach(id=>$(id).onchange=refreshConsent);
+$("consentNext").onclick=()=>{
+  $("s_consent").classList.add("hidden");
+  $("s_form").classList.remove("hidden");
+  buildSlides(); cur=0; renderSlide();
+};
+
+/* submit */
+function submit(){
+  const payload={ v:2, ok:true, mode:"vip_apply", lang:LANG,
+    age_ok:true, rules_ok:true, inactivity_ok:true,
+    role:ST.role, age:ST.age, age_female:ST.age_female, age_male:ST.age_male,
+    country:ST.country, city:ST.city,
+    seeking:ST.seeking, orientation:ST.orientation, marital:ST.marital, zodiac:ST.zodiac,
+    communication:ST.communication, boundaries:ST.boundaries,
+    privacy:ST.privacy, travel:ST.travel, children:ST.children,
+    female_height_cm:ST.female_height_cm, female_weight_kg:ST.female_weight_kg,
+    male_height_cm:ST.male_height_cm, male_weight_kg:ST.male_weight_kg, penis_size_cm:ST.penis_size_cm,
+    x_username:ST.x_username, instagram_username:ST.instagram_username, ts:Date.now() };
+  $("s_form").classList.add("hidden");
+  $("s_done").classList.remove("hidden");
+  set("t_done",T.done); set("t_done_sub",T.done_sub); set("closeBtn",T.close);
+  try{ tg.sendData(JSON.stringify(payload)); }catch(e){}
+}
+$("closeBtn").onclick=()=>{ try{ tg.close(); }catch(e){} };
+
+/* boot */
+Promise.all([
+  fetch("profile_catalog.json").then(r=>r.json()).catch(()=>null),
+  fetch("cities.json").then(r=>r.json()).catch(()=>({})),
+]).then(([cat,cities])=>{ CAT=cat; CITYDATA=cities||{}; refreshConsent(); });
+</script>
+</body>
+</html>
