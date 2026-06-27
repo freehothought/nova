@@ -120,6 +120,10 @@ const ST={ role:null, age:null, age_female:null, age_male:null, country:null, ci
   female_height_cm:null, female_weight_kg:null, male_height_cm:null, male_weight_kg:null, penis_size_cm:null,
   x_username:null, instagram_username:null };
 
+/* Role can be pre-picked on the bot panel and passed as ?role=; then the form skips it. */
+const PRESET_ROLE=(new URLSearchParams(location.search).get("role")||"").toLowerCase();
+if(["woman","man","couple"].includes(PRESET_ROLE)) ST.role=PRESET_ROLE;
+
 /* ---- Slide plan (built after role known for body conditionality) ---- */
 let SLIDES=[], cur=0;
 function buildSlides(){
@@ -129,6 +133,7 @@ function buildSlides(){
     {id:"communication"}, {id:"boundaries"}, {id:"privacy"}, {id:"travel"},
     {id:"children"}, {id:"body"}, {id:"social"},
   ];
+  if(ST.role) SLIDES=SLIDES.filter(s=>s.id!=="role");
 }
 
 /* ---- Profile strength ---- */
