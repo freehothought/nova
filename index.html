@@ -297,7 +297,8 @@ function finish(skip){
     age: skip?null:ageVal("age1"),
     age2: (skip||!couple)?null:ageVal("age2"),
     country: skip?null:(document.getElementById("country").value||null),
-    city: skip?null:(document.getElementById("city").value.trim()||null), ts:Date.now() };
+    city: skip?null:(document.getElementById("city").value.trim()||null),
+    guard: Q.get("guard")==="1"?1:0, query: Q.get("query")||null, ts:Date.now() };
   document.getElementById("step2").classList.add("hidden");
   document.getElementById("done").classList.remove("hidden");
   try{ tg.sendData(JSON.stringify(payload)); }catch(e){}
