@@ -7,7 +7,7 @@
 <title>Nova · Özel Kulüp Başvuru</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  :root{--bg:#17212b;--fg:#fff;--hint:#8a98a5;--card:#1e2a36;--accent:#3390ec;--ok:#4dcb6d;--line:#2a3744;--gold:#e6b450}
+  :root{--bg:var(--tg-theme-secondary-bg-color,#17212b);--fg:var(--tg-theme-text-color,#fff);--hint:var(--tg-theme-hint-color,#8a98a5);--card:var(--tg-theme-bg-color,#1e2a36);--accent:#3390ec;--ok:#4dcb6d;--line:#2a3744;--tile:#26333F;--brand1:#8b5cf6;--brand2:#ec4899;--gold:#e6b450}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
@@ -20,10 +20,10 @@
   .check{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:14px;line-height:1.4}
   .check input{margin-top:2px;width:18px;height:18px;accent-color:var(--accent);flex:0 0 auto}
   .grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
-  .chip{padding:9px 13px;border-radius:20px;background:#26333f;border:1px solid var(--line);font-size:13px;cursor:pointer;transition:.12s}
+  .chip{padding:9px 13px;border-radius:20px;background:var(--tile);border:1px solid var(--line);font-size:13px;cursor:pointer;transition:.12s}
   .chip.sel{background:var(--accent);border-color:var(--accent);color:#fff}
   .grp-title{font-size:13px;font-weight:600;color:var(--gold);margin:14px 0 2px}
-  input[type=text],select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#26333f;color:var(--fg);font-size:14px;margin-top:6px}
+  input[type=text],select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--tile);color:var(--fg);font-size:14px;margin-top:6px}
   select{appearance:none;-webkit-appearance:none}
   input[type=text]::placeholder{color:var(--hint)}
   .btn{width:100%;padding:14px;border:0;border-radius:12px;background:var(--accent);color:#fff;font-size:16px;font-weight:600;cursor:pointer;margin-top:16px;transition:.15s}
@@ -33,21 +33,46 @@
   .hidden{display:none}
   .topbar{display:flex;align-items:center;gap:10px;margin-bottom:6px}
   .back{font-size:20px;color:var(--hint);cursor:pointer;flex:0 0 auto;width:24px}
-  .progress{flex:1;height:6px;background:#26333f;border-radius:6px;overflow:hidden}
+  .progress{flex:1;height:6px;background:var(--tile);border-radius:6px;overflow:hidden}
   .pbar{height:100%;background:var(--accent);width:0;transition:width .3s}
   .slide{animation:slidein .26s ease}
   @keyframes slidein{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
   .strength{margin:6px 0 0}
-  .sbar-wrap{height:8px;background:#26333f;border-radius:8px;overflow:hidden;margin-top:6px}
+  .sbar-wrap{height:8px;background:var(--tile);border-radius:8px;overflow:hidden;margin-top:6px}
   .sbar{height:100%;background:linear-gradient(90deg,#3390ec,#4dcb6d);width:0;transition:width .4s}
   .ok-screen{text-align:center;padding-top:50px}
   .ok-screen .big{font-size:60px}
   .ages{display:flex;gap:10px}.ages>div{flex:1}
   html[dir=rtl] .topbar{flex-direction:row-reverse}
+
+  /* — Nova brand + Telegram theme layer — */
+  @supports (color:color-mix(in srgb,red 50%,blue)){
+    :root{--line:color-mix(in srgb,var(--fg) 14%,transparent);--tile:color-mix(in srgb,var(--fg) 7%,var(--card))}
+    .btn:disabled{background:color-mix(in srgb,var(--fg) 10%,var(--card));color:var(--hint)}
+  }
+  body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(620px 320px at 88% -60px,rgba(139,92,246,.18),transparent 62%),
+               radial-gradient(520px 280px at -70px 34%,rgba(236,72,153,.12),transparent 60%)}
+  .brand{text-align:center;font-weight:800;letter-spacing:.22em;font-size:13px;margin:2px 0 0;text-transform:uppercase;
+    background:linear-gradient(135deg,var(--brand1),var(--brand2));-webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;color:transparent}
+  .gtitle{text-align:center;color:var(--hint);font-size:12px;margin:2px 0 10px}
+  .gtitle:empty{display:none}
+  .btn:not(:disabled){background:linear-gradient(135deg,var(--brand1),var(--brand2))}
+  .pbar{background:linear-gradient(90deg,var(--brand1),var(--brand2))}
+  .chip.sel{background:linear-gradient(135deg,var(--brand1),var(--brand2));border-color:transparent;color:#fff}
+  .emoji.sel{border-color:var(--brand2)}
+  @supports (((-webkit-backdrop-filter:blur(8px)) or (backdrop-filter:blur(8px))) and (color:color-mix(in srgb,red 50%,blue))){
+    .card{background:color-mix(in srgb,var(--card) 78%,transparent);
+      backdrop-filter:blur(14px) saturate(1.15);-webkit-backdrop-filter:blur(14px) saturate(1.15)}
+  }
+  @keyframes pop{0%{transform:scale(.35);opacity:0}55%{transform:scale(1.18)}100%{transform:scale(1)}}
+  .ok-screen .big{animation:pop .55s cubic-bezier(.2,1.3,.4,1)}
 </style>
 </head>
 <body>
 <div class="wrap">
+  <div class="brand">Nova</div>
   <div class="topbar">
     <span class="back hidden" id="back">‹</span>
     <div class="progress"><div class="pbar" id="pbar"></div></div>
