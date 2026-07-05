@@ -7,7 +7,7 @@
 <title>Nova · Verify</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  :root{--bg:#17212b;--fg:#fff;--hint:#8a98a5;--card:#1e2a36;--accent:#3390ec;--ok:#4dcb6d;--line:#2a3744}
+  :root{--bg:var(--tg-theme-secondary-bg-color,#17212b);--fg:var(--tg-theme-text-color,#fff);--hint:var(--tg-theme-hint-color,#8a98a5);--card:var(--tg-theme-bg-color,#1e2a36);--accent:#3390ec;--ok:#4dcb6d;--line:#2a3744;--tile:#26333F;--brand1:#8b5cf6;--brand2:#ec4899}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
@@ -19,32 +19,58 @@
   .check{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:14px;line-height:1.4}
   .check input{margin-top:2px;width:18px;height:18px;accent-color:var(--accent);flex:0 0 auto}
   .emojis{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px}
-  .emoji{font-size:30px;background:#26333f;border:2px solid transparent;border-radius:12px;
+  .emoji{font-size:30px;background:var(--tile);border:2px solid transparent;border-radius:12px;
     width:54px;height:54px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s}
   .emoji.sel{border-color:var(--accent);background:#21405e}
   .emoji.bad{border-color:#e25555;animation:shake .3s}
   @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
   .grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
-  .chip{padding:9px 13px;border-radius:20px;background:#26333f;border:1px solid var(--line);font-size:13px;cursor:pointer;transition:.12s}
+  .chip{padding:9px 13px;border-radius:20px;background:var(--tile);border:1px solid var(--line);font-size:13px;cursor:pointer;transition:.12s}
   .chip.sel{background:var(--accent);border-color:var(--accent);color:#fff}
-  input[type=text],select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#26333f;color:var(--fg);font-size:14px;margin-top:4px}
+  input[type=text],select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--tile);color:var(--fg);font-size:14px;margin-top:4px}
   select{appearance:none;-webkit-appearance:none}
   input[type=text]::placeholder{color:var(--hint)}
   .btn{width:100%;padding:14px;border:0;border-radius:12px;background:var(--accent);color:#fff;font-size:16px;font-weight:600;cursor:pointer;margin-top:18px;transition:.15s}
   .btn:disabled{background:#33414e;color:#73818e;cursor:not-allowed}
   .skip{display:block;text-align:center;color:var(--hint);font-size:13px;margin-top:12px;cursor:pointer;text-decoration:underline}
   .hidden{display:none}
-  .progress{height:5px;background:#26333f;border-radius:5px;margin:10px 0 16px;overflow:hidden}
+  .progress{height:5px;background:var(--tile);border-radius:5px;margin:10px 0 16px;overflow:hidden}
   .pbar{height:100%;background:var(--accent);width:33%;transition:width .3s}
   .slide{animation:slidein .28s ease}
   @keyframes slidein{from{transform:translateX(46px);opacity:0}to{transform:translateX(0);opacity:1}}
   .ok-screen{text-align:center;padding-top:60px}
   .ok-screen .big{font-size:64px}
   html[dir=rtl] .check{flex-direction:row}
+
+  /* — Nova brand + Telegram theme layer — */
+  @supports (color:color-mix(in srgb,red 50%,blue)){
+    :root{--line:color-mix(in srgb,var(--fg) 14%,transparent);--tile:color-mix(in srgb,var(--fg) 7%,var(--card))}
+    .btn:disabled{background:color-mix(in srgb,var(--fg) 10%,var(--card));color:var(--hint)}
+  }
+  body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(620px 320px at 88% -60px,rgba(139,92,246,.18),transparent 62%),
+               radial-gradient(520px 280px at -70px 34%,rgba(236,72,153,.12),transparent 60%)}
+  .brand{text-align:center;font-weight:800;letter-spacing:.22em;font-size:13px;margin:2px 0 0;text-transform:uppercase;
+    background:linear-gradient(135deg,var(--brand1),var(--brand2));-webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;color:transparent}
+  .gtitle{text-align:center;color:var(--hint);font-size:12px;margin:2px 0 10px}
+  .gtitle:empty{display:none}
+  .btn:not(:disabled){background:linear-gradient(135deg,var(--brand1),var(--brand2))}
+  .pbar{background:linear-gradient(90deg,var(--brand1),var(--brand2))}
+  .chip.sel{background:linear-gradient(135deg,var(--brand1),var(--brand2));border-color:transparent;color:#fff}
+  .emoji.sel{border-color:var(--brand2)}
+  @supports (((-webkit-backdrop-filter:blur(8px)) or (backdrop-filter:blur(8px))) and (color:color-mix(in srgb,red 50%,blue))){
+    .card{background:color-mix(in srgb,var(--card) 78%,transparent);
+      backdrop-filter:blur(14px) saturate(1.15);-webkit-backdrop-filter:blur(14px) saturate(1.15)}
+  }
+  @keyframes pop{0%{transform:scale(.35);opacity:0}55%{transform:scale(1.18)}100%{transform:scale(1)}}
+  .ok-screen .big{animation:pop .55s cubic-bezier(.2,1.3,.4,1)}
 </style>
 </head>
 <body>
 <div class="wrap">
+  <div class="brand">Nova</div>
+  <div class="gtitle" id="g_title"></div>
   <div id="step1">
     <h1 id="t_title"></h1>
     <div class="sub" id="t_sub"></div>
@@ -197,6 +223,9 @@ const T = I18N[LANG];
 const X = EXTRA[LANG] || EXTRA.en;
 if(RTL.includes(LANG)){ document.documentElement.setAttribute("dir","rtl"); }
 document.documentElement.setAttribute("lang",LANG);
+const hap=(k)=>{try{k==="sel"?tg.HapticFeedback.selectionChanged():tg.HapticFeedback.notificationOccurred(k)}catch(e){}};
+try{const _gt=new URLSearchParams(location.search).get("t");if(_gt){const _e=document.getElementById("g_title");if(_e)_e.textContent="「"+_gt+"」";}}catch(e){}
+try{tg.setHeaderColor&&tg.setHeaderColor("secondary_bg_color");}catch(e){}
 
 const set=(id,txt)=>{const e=document.getElementById(id); if(e) e.textContent=txt;};
 set("t_title",T.title); set("t_sub",T.sub); set("t_age",T.age); set("t_rules",T.rules); set("t_inact",X.inact);
@@ -262,8 +291,8 @@ function buildCaptcha(){
   sh.forEach(em=>{
     const d=document.createElement("div"); d.className="emoji"; d.textContent=em;
     d.onclick=()=>{
-      if(em===target){ document.querySelectorAll(".emoji").forEach(x=>x.classList.remove("sel","bad")); d.classList.add("sel"); window._cap=true; refresh(); }
-      else{ d.classList.add("bad"); window._cap=false; setTimeout(()=>d.classList.remove("bad"),300); setTimeout(buildCaptcha,350); refresh(); }
+      if(em===target){ document.querySelectorAll(".emoji").forEach(x=>x.classList.remove("sel","bad")); d.classList.add("sel"); window._cap=true; hap("success"); refresh(); }
+      else{ d.classList.add("bad"); window._cap=false; hap("error"); setTimeout(()=>d.classList.remove("bad"),300); setTimeout(buildCaptcha,350); refresh(); }
     };
     box.appendChild(d);
   });
@@ -295,7 +324,7 @@ function buildChips(){
   T.genders.slice(0,3).forEach((it,i)=>{
     const d=document.createElement("div"); d.className="chip"; d.textContent=it;
     d.onclick=()=>{
-      [...c.children].forEach(x=>x.classList.remove("sel")); d.classList.add("sel"); roleSel=i;
+      hap("sel"); [...c.children].forEach(x=>x.classList.remove("sel")); d.classList.add("sel"); roleSel=i;
       const couple=(i===2);
       document.getElementById("card_age2").classList.toggle("hidden", !couple);
       set("t_age1", couple ? X.p1 : X.age);
@@ -309,6 +338,7 @@ function ageVal(id){ const v=parseInt((document.getElementById(id).value||"").tr
 
 const GUARD_BRIDGE="https://13-61-190-174.sslip.io:8443/guard/complete";
 function finish(skip){
+  hap("success");
   const Q=new URLSearchParams(location.search);
   const g=Q.get("g");
   const couple=(roleSel===2);
