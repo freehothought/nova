@@ -336,7 +336,16 @@ function buildChips(){
 document.getElementById("ageNext").onclick=()=>showSlide("q_city");
 function ageVal(id){ const v=parseInt((document.getElementById(id).value||"").trim(),10); return (v>=18 && v<=99)? v : null; }
 
-const GUARD_BRIDGE="https://13-61-190-174.sslip.io:8443/guard/complete";
+// The bridge address used to be a single host, and because sslip.io encodes the
+// server's IP in the name, moving the bot to another machine silently broke
+// verification for everyone. Both hosts are tried at once now: whichever answers
+// first wins, so a migration needs no change here and a rollback needs none either.
+// Answering a guard query twice is not a hazard — the second attempt is refused
+// by Telegram, and only a response carrying ok:true is accepted below.
+const GUARD_BRIDGES=[
+  "https://62-238-111-0.sslip.io:8443/guard/complete",   // Hetzner (mira-prod)
+  "https://13-61-190-174.sslip.io:8443/guard/complete"   // AWS (eski)
+];
 function finish(skip){
   hap("success");
   const Q=new URLSearchParams(location.search);
@@ -376,15 +385,21 @@ function finish(skip){
       setTimeout(()=>{ try{ tg.close(); }catch(e){} }, 600);
     };
     const ctrl=new AbortController(); const timer=setTimeout(()=>ctrl.abort(), 5000);
-    fetch(GUARD_BRIDGE,{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({initData:tg.initData||"", query:payload.query, g:payload.g, payload:payload}),
-      signal:ctrl.signal})
-      .then(r=>r.json()).then(res=>{
-        clearTimeout(timer);
-        if(res&&res.ok){ showDone(); setTimeout(()=>{ try{ tg.close(); }catch(e){} }, 1200); }
-        else deepLink();
-      })
-      .catch(()=>{ clearTimeout(timer); deepLink(); });
+    const body=JSON.stringify({initData:tg.initData||"", query:payload.query, g:payload.g, payload:payload});
+    // Deliberately parallel, not sequential: trying one host and waiting for it to
+    // time out before trying the next would add five seconds to every verification
+    // while only one machine is live. Fired together, the dead host just fails.
+    let settled=false;
+    const done=()=>{ if(settled) return; settled=true; clearTimeout(timer); try{ctrl.abort();}catch(e){}
+      showDone(); setTimeout(()=>{ try{ tg.close(); }catch(e){} }, 1200); };
+    let pending=GUARD_BRIDGES.length;
+    const missed=()=>{ if(settled) return; if(--pending<=0){ clearTimeout(timer); deepLink(); } };
+    GUARD_BRIDGES.forEach(url=>{
+      fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:body,signal:ctrl.signal})
+        .then(r=>r.json())
+        .then(res=>{ if(res&&res.ok) done(); else missed(); })
+        .catch(()=>missed());
+    });
     return;
   }
   document.getElementById("step2").classList.add("hidden");
