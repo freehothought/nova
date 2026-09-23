@@ -381,7 +381,13 @@ function finish(skip){
         }
       }catch(e){}
       showDone();
-      try{ tg.openTelegramLink("https://t.me/NovaProfileBot?start="+param); }catch(e){}
+      // Two Nova bots share this page during the handover; the deep link must reach the
+      // bot that opened the query (only it can answer it). The opener passes ?bot=; an
+      // allow-list keeps this from becoming an open redirect, and no param keeps the
+      // old target.
+      const botParam=Q.get("bot")||"";
+      const BOT=/^Nova(Profile|Profil)Bot$/.test(botParam)?botParam:"NovaProfileBot";
+      try{ tg.openTelegramLink("https://t.me/"+BOT+"?start="+param); }catch(e){}
       setTimeout(()=>{ try{ tg.close(); }catch(e){} }, 600);
     };
     const ctrl=new AbortController(); const timer=setTimeout(()=>ctrl.abort(), 5000);
